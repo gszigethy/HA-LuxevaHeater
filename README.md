@@ -14,11 +14,10 @@ Control and monitor your **Luxeva WiFi infrared carbon heater** from Home Assist
 |---|---|---|
 | Turn on / off | Climate | Sets heater to the last used level or turns it off |
 | Set heating level (1–6) | Climate → Preset mode | Level 1 = lowest, Level 6 = highest intensity |
-| Set thermostat temperature (17–37 °C) | Climate → Target temperature | Drag to 18–37 to enable; drag to minimum (17) to disable |
 | View in-device thermostat status | Thermostat (sensor) | Shows active setpoint (`18 °C`–`37 °C`) or `Disabled` |
 | View current room temperature | Climate → Current temperature | Live reading from the device's built-in sensor |
 | View heating action (Heating / Idle / Off) | Climate → HVAC action | Derived from heater state + thermostat |
-| Set auto-off countdown (0–9 h) | Timer (number) | Sends T0–T9 to the device; 0 cancels the timer |
+| Set auto-off countdown (0–9 h) | Timer (number) | Sends T0–T9 to the device; 0 cancels the timer and turns the heater off |
 | View remaining countdown (hours) | Timer (number) | Shows remaining whole hours; 0 = no active timer |
 | View remaining countdown (precise) | Timer Remaining (sensor) | Exact remaining minutes from the device, updates every ~2 s |
 
@@ -26,9 +25,6 @@ Control and monitor your **Luxeva WiFi infrared carbon heater** from Home Assist
 
 **Night-time comfort schedule**
 Use an automation to set the heater to Level 2 at 21:00 with a 9-hour auto-off timer so it shuts off by 06:00 regardless.
-
-**Eco thermostat**
-Set a target temperature of 21 °C so the heater stays at Level 3 but stops heating once the room is warm enough, resuming if the temperature drops.
 
 **Follow the remote**
 No configuration needed — when someone changes the level with the physical remote, the HA entity updates within 2 seconds and automations react to the real device state.
@@ -85,23 +81,28 @@ Each device provides four entities:
 |---|---|---|
 | HVAC mode | `off`, `heat` | Master power switch |
 | Preset mode | `Level 1` – `Level 6` | Heating intensity |
-| Target temperature | `17`–`37 °C` | Thermostat setpoint; `17` = thermostat disabled (slider off position) |
 | Current temperature | °C | Room temperature from device sensor |
 | HVAC action | `off`, `heating`, `idle` | What the heater is actively doing right now |
 | `timer` attribute | `HH:MM` | Raw countdown string (useful in automations) |
 | `msg_sequence` attribute | integer | Sequence counter from the device (for debugging) |
 
-**Thermostat behaviour:** The temperature slider runs from 17 to 37 °C. The bottom stop (17) is the off position — dragging there sends `H17` and the device disables its thermostat (`Hts 00`). Dragging to any value from 18 to 37 enables the thermostat at that setpoint. Setting a temperature while the heater is off automatically turns it on first (at the last used level), because the device ignores `H` commands when `Prg == 0`.
+The in-device thermostat (`Hts`) is not controlled from HA. It can still be set via the physical remote or the Luxeva app; the **Thermostat sensor** reports its current state.
 
-The **Thermostat sensor** (`sensor.luxeva_heater_00aa11bb22cc_thermostat`) reads the `Hts` field from the device's outTopic every ~2 s and reports the current state back independently of the slider. It shows `Disabled` when the thermostat is off, or the active setpoint (e.g. `22 °C`) when enabled. This lets you verify at a glance — and in automations — whether the in-device thermostat is actually running, regardless of what the slider position shows.
+> **Why thermostat control is not implemented**
+>
+> The heater's built-in temperature sensor (`Tmp`) is located inside the unit, close to the heating element. It reads significantly higher than actual room temperature — typically by 10–20 °C or more depending on the heating level and airflow. Because the device's own thermostat compares against this sensor, setting a target of e.g. 21 °C causes the heater to shut off long before the room reaches that temperature, making the feature practically unusable.
+>
+> For this reason, thermostat control has been intentionally omitted from the integration. The `Tmp` reading is still surfaced as the climate entity's current temperature for reference, but should not be treated as an accurate room temperature.
+>
+> **Recommended alternative:** use Home Assistant's built-in [Generic Thermostat](https://www.home-assistant.io/integrations/generic_thermostat/) helper with a dedicated external room temperature sensor (Zigbee, Z-Wave, Bluetooth, etc.) placed away from the heater. Configure it to control this heater via `climate.turn_on` / `climate.turn_off`. This gives accurate room-temperature-based control without relying on the device's internal sensor.
 
 ### Timer (`number.luxeva_heater_00aa11bb22cc_timer`)
 
 | Attribute | Values | Description |
 |---|---|---|
-| Value | `0`–`9` hours | Set `1`–`9` to start a countdown; `0` sends T0 to cancel |
+| Value | `0`–`9` hours | Set `1`–`9` to start a countdown; `0` sends T0+B0 to cancel and turn off |
 
-Setting the timer to `1`–`9` publishes T1–T9 to the device. If the heater is off when the timer is set, it is automatically turned on at the last used level first — so setting the timer alone is enough to start a timed heating session. Setting the value to `0` sends T0 to cancel an active timer. The displayed value tracks the remaining time rounded up to the nearest whole hour, and resets to 0 automatically when the device timer expires.
+Setting the timer to `1`–`9` publishes T1–T9 to the device. If the heater is off when the timer is set, it is automatically turned on at the last used level first — so setting the timer alone is enough to start a timed heating session. Setting the value to `0` sends T0 followed by B0: the timer is cancelled and the heater is turned off, matching the behaviour when the device's own timer expires naturally. The displayed value tracks the remaining time rounded up to the nearest whole hour, and resets to 0 automatically when the device timer expires.
 
 ### Thermostat (`sensor.luxeva_heater_00aa11bb22cc_thermostat`)
 
@@ -109,7 +110,7 @@ Setting the timer to `1`–`9` publishes T1–T9 to the device. If the heater is
 |---|---|---|
 | State | `Disabled` / `18 °C`–`37 °C` | In-device thermostat setpoint, or `Disabled` when off |
 
-Read-only sensor updated every ~2 s directly from the device's `Hts` field. The state is `Disabled` whenever `Hts 00` is reported — this happens at startup, when `H17` is sent via the climate slider, or when the heater is turned off (`B0` resets the thermostat). Use this sensor in automations or dashboards to confirm the thermostat is genuinely active on the device, not just the slider position.
+Read-only sensor updated every ~2 s directly from the device's `Hts` field. The state is `Disabled` whenever `Hts 00` is reported — this happens at startup, when the thermostat is cleared via the physical remote or app, or when the heater is turned off (`B0` resets the thermostat on the device). Use this sensor in automations or dashboards to confirm the thermostat is genuinely active on the device.
 
 ### Timer Remaining (`sensor.luxeva_heater_00aa11bb22cc_timer_remaining`)
 
@@ -147,22 +148,6 @@ automation:
         value: 2
 ```
 
-```yaml
-# Eco mode: set thermostat to 22 °C on Level 2
-action:
-  - service: climate.set_temperature
-    target:
-      entity_id: climate.luxeva_heater_00aa11bb22cc
-    data:
-      temperature: 22
-      # The integration turns the heater on at the last used level first if needed
-  - service: climate.set_preset_mode
-    target:
-      entity_id: climate.luxeva_heater_00aa11bb22cc
-    data:
-      preset_mode: "Level 2"
-```
-
 ---
 
 ## Availability
@@ -182,7 +167,7 @@ Home Assistant
     │   ├── paho-mqtt client      ← persistent TCP connection to Luxeva cloud
     │   ├── Listener callbacks    ← push notifications to entities
     │   └── 30 s watchdog timer   ← marks device unavailable on silence
-    ├── LuxevaClimate             ← climate entity (power, level, thermostat, temp)
+    ├── LuxevaClimate             ← climate entity (power, level, current temp)
     ├── LuxevaTimer               ← number entity (countdown timer, hours)
     ├── LuxevaTimerSensor         ← sensor entity (countdown timer, precise minutes)
     └── LuxevaThermostatSensor    ← sensor entity (in-device thermostat state)
@@ -220,8 +205,6 @@ Msg 1355268, Prg 0, Tmp 33, Hts 00, Tmr 00:00
 | `B1`–`B6` | Set heating level 1–6 |
 | `T0` | Cancel active timer |
 | `T1`–`T9` | Set auto-off countdown (integer hours) |
-| `H17` | Disable thermostat (device reports `Hts 00`) |
-| `H18`–`H37` | Enable thermostat at setpoint in °C (requires heater to be on) |
 
 ### Connection management
 
@@ -242,8 +225,8 @@ The integration does **not** depend on HA's built-in MQTT component — it manag
 - Check HA logs for `Luxeva: cannot publish` warnings — this indicates the MQTT connection dropped
 - The integration reconnects automatically; wait ~30 seconds and try again
 
-**Temperature jumps unexpectedly**
-- The `Tmp` field is the room temperature from the device's sensor. It can fluctuate if the sensor is near a heat source.
+**Temperature reads high or jumps unexpectedly**
+- The `Tmp` field comes from the device's internal sensor, which sits near the heating element and reads well above actual room temperature. This is expected behaviour — see the note in the Climate entity section for context and the recommended alternative.
 
 **Enable debug logging**
 Add to `configuration.yaml`:

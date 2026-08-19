@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,9 +20,6 @@ from .const import DOMAIN, LEVEL_TO_PRESET, PRESET_MODES, PRESET_TO_LEVEL
 from .coordinator import LuxevaConfigEntry, LuxevaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-_TEMP_MIN = 17.0  # H17 is the device's "disable thermostat" command; maps to the slider's off position
-_TEMP_MAX = 37.0
 
 
 async def async_setup_entry(
@@ -38,14 +35,11 @@ class LuxevaClimate(ClimateEntity):
 
     HVAC modes : off / heat
     Preset modes: Level 1–6  (heating intensity; sends B1–B6)
-    Target temp : 18–37 °C   (thermostat setpoint; sends H<n>)
-                  None when thermostat is disabled (Hts == 0)
     Current temp: Tmp field  (room temperature sensor, °C)
-    HVAC action : derived from Prg, Tmp and Hts
+    HVAC action : derived from Prg and Hts (Hts may be set by physical remote/app)
 
-    Device constraint: Hts can only be non-zero while Prg > 0. Setting
-    target_temperature while the heater is off turns it on first at the
-    last used level. Turning the heater off (B0) resets Hts on the device.
+    The in-device thermostat (Hts) is not controlled from HA; use the
+    LuxevaThermostatSensor to monitor its state.
     """
 
     _attr_has_entity_name = True
@@ -53,12 +47,8 @@ class LuxevaClimate(ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_preset_modes = PRESET_MODES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = _TEMP_MIN
-    _attr_max_temp = _TEMP_MAX
-    _attr_target_temperature_step = 1.0
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
@@ -127,10 +117,7 @@ class LuxevaClimate(ClimateEntity):
 
     @property
     def target_temperature(self) -> float | None:
-        hts = self._coordinator.data.get("hts")
-        if hts:
-            return float(hts)
-        return _TEMP_MIN
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -166,28 +153,3 @@ class LuxevaClimate(ClimateEntity):
             self._coordinator.last_level = level
             self._coordinator.publish(f"B{level}")
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set thermostat setpoint (18–37 °C).
-
-        If the heater is off, it is turned on at the last used level first —
-        the device ignores H commands when Prg == 0.
-        """
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-
-        temp = round(temperature)
-        if not (_TEMP_MIN <= temp <= _TEMP_MAX):
-            _LOGGER.warning("Temperature %d out of range [%d, %d]", temp, int(_TEMP_MIN), int(_TEMP_MAX))
-            return
-
-        if self._coordinator.data.get("prg", 0) == 0:
-            _LOGGER.debug("Heater off — turning on at level %d before setting temperature", self._coordinator.last_level)
-            self._coordinator.publish(f"B{self._coordinator.last_level}")
-
-        _LOGGER.debug("Setting target temperature: %d °C", temp)
-        self._coordinator.publish(f"H{temp}")
-        # H17 tells the device to disable the thermostat; it confirms with Hts 00.
-        # Optimistically write 0 so hvac_action doesn't flash IDLE for 2 s.
-        self._coordinator.data["hts"] = 0 if temp == 17 else temp
-        self.async_write_ha_state()

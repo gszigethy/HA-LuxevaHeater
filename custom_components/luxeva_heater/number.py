@@ -29,7 +29,8 @@ class LuxevaTimer(NumberEntity):
     """Countdown timer for the Luxeva heater.
 
     Setting a value 1–9 publishes B<last_level> (if heater is off) then T<N>.
-    Setting 0 publishes T0 to cancel an active timer.
+    Setting 0 publishes T0 then B0, cancelling the timer and turning the heater
+    off — mirroring what the device does when its own timer expires.
     The displayed value tracks remaining time (ceiling to nearest hour); resets
     to 0 automatically when the device reports Tmr 00:00.
     """
@@ -86,3 +87,6 @@ class LuxevaTimer(NumberEntity):
             self._coordinator.publish(f"B{self._coordinator.last_level}")
         _LOGGER.debug("Setting timer: %d hour(s)", hours)
         self._coordinator.publish(f"T{hours}")
+        if hours == 0:
+            _LOGGER.debug("Timer cancelled — turning heater off (B0)")
+            self._coordinator.publish("B0")
