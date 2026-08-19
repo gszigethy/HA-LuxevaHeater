@@ -1,0 +1,14 @@
+{
+  "domain": "luxeva_heater",
+  "name": "Luxeva Heater",
+  "version": "1.0.0",
+  "documentation": "https://github.com/gszigethy/luxeva_heater",
+  "issue_tracker": "https://github.com/gszigethy/luxeva_heater/issues",
+  "codeowners": ["@gszigethy"],
+  "requirements": ["paho-mqtt>=1.6.1"],
+  "loggers": ["paho"],
+  "dependencies": [],
+  "iot_class": "cloud_push",
+  "config_flow": true,
+  "integration_type": "device"
+}

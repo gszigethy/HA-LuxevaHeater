@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Luxeva hősugárzó beállítása",
+        "description": "Adja meg a Luxeva hősugárzón lévő matricán feltüntetett MAC-címet (pl. `00:AA:11:BB:22:CC`). Az integráció automatikusan csatlakozik a Luxeva felhőszerveréhez.",
+        "data": {
+          "mac": "Eszköz MAC-cím"
+        },
+        "data_description": {
+          "mac": "Az eszközön lévő matricán található (formátum: XX:XX:XX:XX:XX:XX vagy XXXXXXXXXXXX)"
+        }
+      },
+      "disclaimer": {
+        "title": "Biztonsági nyilatkozat",
+        "description": "## ⚠️ Távoli infravörös hősugárzó vezérlés — Nyilatkozat\n\n**FIGYELMEZTETÉS:** Ennek az integrációnak az infravörös hősugárzó távirányítására történő használata tűzveszélyt okozhat, és anyagi kárhoz, súlyos sérüléshez vagy halálhoz vezethet.\n\n---\n\n### Fontos biztonsági figyelmeztetés\n\nAz infravörös hősugárzó távirányítását lehetővé tevő integráció, automatizálás, szoftver, hardver, szkript, alkalmazás vagy szolgáltatás telepítésével, engedélyezésével, konfigurálásával vagy használatával Ön elismeri és elfogadja, hogy a fűtőberendezés távirányítása jelentős biztonsági kockázatokat hordoz magában.\n\nA fűtőberendezések távirányítása kizárólag olyan eszközökkel alkalmazható, amelyeket gyártójuk kifejezetten tervezett, tanúsított és jóváhagyott felügyelet nélküli és távirányítású üzemeltetésre. A távirányítás olyan berendezésekkel való alkalmazása, amelyeket nem ilyen célra terveztek, jelentősen növelheti a tűz, sérülés, anyagi kár, berendezéskár vagy egyéb veszélyes helyzetek kockázatát.\n\n### Lehetséges kockázatok és veszélyek\n\nA felhasználó megérti és elismeri, hogy az infravörös hősugárzó távoli bekapcsolása az alábbiakat eredményezheti, de nem kizárólag:\n\n- Tűzveszély, amelyet a hősugárzóhoz túl közel elhelyezett gyúlékony anyagok okoznak.\n- A környező tárgyak, bútorok, szövetek, függönyök, papír vagy egyéb éghető anyagok túlmelegedése.\n- Meghibásodás, helytelen konfiguráció, szoftverhibák, hardverhibák, kommunikációs hibák vagy felhasználói hiba által okozott anyagi kár.\n- Személyi sérülés, égési sérülések vagy a lakók, látogatók, gyermekek, háziállatok vagy harmadik felek sérülése.\n- Hálózati kapcsolat elvesztéséből, áramszünetből, berendezésmeghibásodásból, automatizálási hibákból, érzékelőmeghibásodásokból vagy váratlan eszközviselkedésből eredő károk.\n- A hősugárzó bekapcsolása felügyelet nélküli helyiségekben.\n- Biztonsági mechanizmusok, termosztátok, érzékelők, relék vagy az irányítórendszer bármely összetevőjének meghibásodása.\n- Illetéktelen hozzáférésből, hackelésből, kiberbiztonsági incidensekből vagy feltört felhasználói fiókokból eredő kockázatok.\n- A gyártói ajánlásokkal, biztonsági utasításokkal, tanúsításokkal vagy a rendeltetésszerű használattal ellentétes üzemeltetés.\n- Egyéb közvetlen, közvetett, járulékos, következményes, különleges vagy büntető jellegű károk, amelyek a rendszer használatából vagy visszaéléséből erednek.\n\n### Felhasználói felelősség\n\nA felhasználó elismeri, hogy:\n\n1. Kizárólag ő felelős annak meghatározásáért, hogy a hősugárzó távirányítása biztonságos és megfelelő-e a saját környezetében.\n2. Meggyőződött arról, hogy a hősugárzó alkalmas a távirányítású és felügyelet nélküli üzemeltetésre, és az ilyen üzemeltetés nem sérti a gyártói utasításokat, figyelmeztetéseket, tanúsításokat, helyi előírásokat, biztosítási követelményeket vagy vonatkozó törvényeket.\n3. Áttanulmányozta és betartja az összes gyártói utasítást, figyelmeztetést, biztonsági irányelvet, helyi előírást és vonatkozó törvényt.\n4. Megfelelő óvintézkedéseket tett a tűz, sérülés, anyagi kár és berendezéskár kockázatának minimalizálása érdekében.\n5. Megérti, hogy egyetlen szoftver, automatizálási platform, integráció, hardverelem vagy irányítórendszer sem garantálhatja a biztonságos üzemeltetést minden körülmény között.\n6. Vállalja a rendszer telepítésével, konfigurálásával, üzemeltetésével és használatával kapcsolatos összes kockázatot.\n\n### Felelősség kizárása\n\nAz alkalmazandó jog által megengedett legteljesebb mértékben a felhasználó elfogadja, hogy az integrációval vagy szoftverrel kapcsolatos szerzők, fejlesztők, közreműködők, karbantartók, terjesztők, kiadók, telepítők, integrátorok és bármely más fél nem vonható felelősségre semmilyen veszteségért, kárért, sérülésért, követelésért, kiadásért, költségért vagy felelősségért, amely az integrációból vagy szoftverből ered, beleértve: az integráció használatát vagy használhatatlanságát; a hősugárzó távirányítását; helytelen konfigurációt vagy telepítést; hardver- vagy szoftverhibákat; kiberbiztonsági incidenseket; felhasználói gondatlanságot vagy visszaélést; nem távirányításra tervezett vagy tanúsított berendezések használatát; vagy bármilyen közvetlen, közvetett, járulékos, következményes, különleges, büntető vagy példás kárt.\n\n### Kártalanítás\n\nA felhasználó vállalja, hogy kártalanítja, megvédi és mentesíti a szerzőket, fejlesztőket, közreműködőket, karbantartókat, terjesztőket, kiadókat, telepítőket, integrátorókat és kapcsolódó feleket minden igénnyel, kötelezettséggel, kárral, veszteséggel, költséggel, ráfordítással és ügyvédi díjjal szemben, amelyek a felhasználó által az integráció és bármely távirányítható fűtőberendezés telepítéséből, konfigurálásából, üzemeltetéséből vagy használatából erednek.\n\n**Jelölje be az alábbi négyzetet annak megerősítéséhez, hogy teljes egészében elolvasta, megértette és elfogadta ezt a nyilatkozatot.**",
+        "data": {
+          "disclaimer_accepted": "Elolvastam és teljes egészében megértettem ezt a nyilatkozatot, és önként elfogadom az összes kapcsolódó kockázatot és feltételt."
+        }
+      }
+    },
+    "error": {
+      "invalid_mac": "Érvénytelen MAC-cím. Használja a XX:XX:XX:XX:XX:XX formátumot (pl. 00:AA:11:BB:22:CC).",
+      "disclaimer_not_accepted": "A folytatáshoz el kell olvasnia és el kell fogadnia a nyilatkozatot."
+    },
+    "abort": {
+      "already_configured": "Ez az eszköz már be van állítva."
+    }
+  }
+}

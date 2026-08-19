@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Luxeva Heater",
+        "description": "Enter the MAC address printed on your Luxeva heater's label (e.g. `00:AA:11:BB:22:CC`). The integration connects to Luxeva's cloud server automatically.",
+        "data": {
+          "mac": "Device MAC address"
+        },
+        "data_description": {
+          "mac": "Found on the sticker on the device (format XX:XX:XX:XX:XX:XX or XXXXXXXXXXXX)"
+        }
+      },
+      "disclaimer": {
+        "title": "Safety Disclaimer",
+        "description": "## ⚠️ Remote Infrared Heater Control — Disclaimer\n\n**WARNING:** Using this integration to remotely control an infrared heater may create a fire hazard and could result in property damage, serious injury, or death.\n\n---\n\n### Important Safety Notice\n\nBy installing, enabling, configuring, or using any integration, automation, software, hardware, script, application, or service that allows the remote control of an infrared heater, you acknowledge and accept that remotely operating a heating device introduces significant safety risks.\n\nRemote control of heating equipment should only be used with devices that are specifically designed, certified, and approved by their manufacturer for unattended and remote operation. Using remote control functions with equipment not intended for such use may significantly increase the risk of fire, injury, property damage, equipment damage, or other hazardous conditions.\n\n### Potential Risks and Hazards\n\nThe user understands and acknowledges that remote activation of an infrared heater may result in, but is not limited to:\n\n- Fire hazards resulting from flammable materials being located too close to the heater.\n- Overheating of surrounding objects, furniture, fabrics, curtains, paper, or other combustible materials.\n- Property damage caused by malfunction, incorrect configuration, software defects, hardware defects, communication failures, or user error.\n- Personal injury, burns, or harm to occupants, visitors, children, pets, or third parties.\n- Damage resulting from loss of network connectivity, power interruptions, equipment failures, automation errors, sensor failures, or unexpected device behavior.\n- Activation of the heater when the premises are unattended.\n- Failure of safety mechanisms, thermostats, sensors, relays, or any component involved in the control system.\n- Risks arising from unauthorized access, hacking, cybersecurity incidents, or compromised user accounts.\n- Operation contrary to manufacturer recommendations, safety instructions, certifications, or intended use.\n- Any other direct, indirect, incidental, consequential, special, or punitive damages arising from the use or misuse of the system.\n\n### User Responsibility\n\nThe user acknowledges that:\n\n1. They are solely responsible for determining whether remote control of the heater is safe and appropriate for their specific environment.\n2. They have verified that the heater is suitable for remote and unattended operation and that such operation does not violate any manufacturer instructions, warnings, certifications, local regulations, insurance requirements, or applicable laws.\n3. They have reviewed and will comply with all manufacturer instructions, warnings, safety guidelines, local regulations, and applicable laws.\n4. They have taken appropriate precautions to minimize the risk of fire, injury, property damage, and equipment damage.\n5. They understand that no software, automation platform, integration, hardware component, or control system can guarantee safe operation under all circumstances.\n6. They assume all risks associated with the installation, configuration, operation, and use of the system.\n\n### Release of Liability\n\nTo the maximum extent permitted by applicable law, the user agrees that the authors, developers, contributors, maintainers, distributors, publishers, installers, integrators, and any other parties associated with the integration or software shall not be held liable for any loss, damage, injury, claim, expense, cost, or liability arising from or related to: the use or inability to use the integration; remote operation of the heater; incorrect configuration or deployment; hardware or software failures; cybersecurity incidents; user negligence or misuse; use of equipment not designed or certified for remote operation; or any direct, indirect, incidental, consequential, special, punitive, or exemplary damages.\n\n### Indemnification\n\nThe user agrees to indemnify, defend, and hold harmless the authors, developers, contributors, maintainers, distributors, publishers, installers, integrators, and associated parties from and against any and all claims, liabilities, damages, losses, costs, expenses, and legal fees arising from or relating to the user's installation, configuration, operation, or use of the integration and any remotely controlled heating equipment.\n\n**Check the box below to confirm you have read, understood, and accepted this disclaimer in its entirety.**",
+        "data": {
+          "disclaimer_accepted": "I have read and understood this disclaimer in its entirety, and I voluntarily accept all associated risks and terms."
+        }
+      }
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address. Use the format XX:XX:XX:XX:XX:XX (e.g. 00:AA:11:BB:22:CC).",
+      "disclaimer_not_accepted": "You must read and accept the disclaimer to continue."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  }
+}
