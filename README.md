@@ -48,7 +48,7 @@ Use HA's energy dashboard together with a smart plug on the heater circuit. The 
 ### Via HACS (recommended)
 
 1. In Home Assistant: **HACS → Integrations → ⋮ → Custom repositories**
-2. Add URL: `https://github.com/gszigethy/luxeva_heater`  Type: **Integration**
+2. Add URL: `https://github.com/gszigethy/HA-LuxevaHeater`  Type: **Integration**
 3. Find **Luxeva Heater** in HACS and click **Download**
 4. Restart Home Assistant
 
