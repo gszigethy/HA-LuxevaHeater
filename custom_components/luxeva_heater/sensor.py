@@ -36,7 +36,7 @@ class LuxevaThermostatSensor(SensorEntity):
 
     Returns the active setpoint ("18 °C" – "37 °C") when the thermostat is
     enabled, or "Disabled" when it is off (device reports Hts 00).
-    Mirrors the H17 / H18–H37 commands sent via the climate entity slider.
+    Read-only — the thermostat can only be changed via the physical remote or the Luxeva app.
     """
 
     _attr_has_entity_name = True

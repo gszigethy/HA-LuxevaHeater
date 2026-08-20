@@ -38,7 +38,7 @@ class LuxevaTimer(NumberEntity):
     _attr_has_entity_name = True
     _attr_name = "Timer"
     _attr_device_class = NumberDeviceClass.DURATION
-    _attr_native_min_value = 0      # 0 = no active timer (read-only state)
+    _attr_native_min_value = 0      # 0 sends T0+B0: cancel timer and turn heater off
     _attr_native_max_value = TIMER_MAX_HOURS
     _attr_native_step = 1
     _attr_native_unit_of_measurement = UnitOfTime.HOURS

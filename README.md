@@ -177,9 +177,6 @@ Home Assistant
 
 | Parameter | Value |
 |---|---|
-| Broker | `iot.luxeva.com.tr:1883` |
-| Transport | Plain TCP (no TLS) |
-| Authentication | None |
 | Client ID | Device MAC without colons, e.g. `00AA11BB22CC` |
 | Status topic (`outTopic`) | `outTopic/00:AA:11:BB:22:CC` — device publishes every ~2 s |
 | Command topic (`inTopic`) | `inTopic/00:AA:11:BB:22:CC` — HA publishes commands here |
