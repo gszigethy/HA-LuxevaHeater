@@ -20,6 +20,7 @@ Control and monitor your **Luxeva WiFi infrared carbon heater** from Home Assist
 | Set auto-off countdown (0–9 h) | Timer (number) | Sends T0–T9 to the device; 0 cancels the timer and turns the heater off |
 | View remaining countdown (hours) | Timer (number) | Shows remaining whole hours; 0 = no active timer |
 | View remaining countdown (precise) | Timer Remaining (sensor) | Exact remaining minutes from the device, updates every ~2 s |
+| Simple on/off actuator for Generic Thermostat | Actuator (switch) | Arms a 1-hour safety timer on each turn-on; designed for use with HA's Generic Thermostat helper |
 
 ### Example use cases
 
@@ -73,7 +74,7 @@ Use HA's energy dashboard together with a smart plug on the heater circuit. The 
 
 ## Entities
 
-Each device provides four entities:
+Each device provides five entities:
 
 ### Climate (`climate.luxeva_heater_00aa11bb22cc`)
 
@@ -94,7 +95,7 @@ The in-device thermostat (`Hts`) is not controlled from HA. It can still be set 
 >
 > For this reason, thermostat control has been intentionally omitted from the integration. The `Tmp` reading is still surfaced as the climate entity's current temperature for reference, but should not be treated as an accurate room temperature.
 >
-> **Recommended alternative:** use Home Assistant's built-in [Generic Thermostat](https://www.home-assistant.io/integrations/generic_thermostat/) helper with a dedicated external room temperature sensor (Zigbee, Z-Wave, Bluetooth, etc.) placed away from the heater. Configure it to control this heater via `climate.turn_on` / `climate.turn_off`. This gives accurate room-temperature-based control without relying on the device's internal sensor.
+> **Recommended alternative:** use Home Assistant's built-in [Generic Thermostat](https://www.home-assistant.io/integrations/generic_thermostat/) helper with a dedicated external room temperature sensor (Zigbee, Z-Wave, Bluetooth, etc.) placed away from the heater. Use the **Actuator switch** (see below) as the `heater` entity — it is specifically designed for this purpose and includes a 1-hour safety timer. See the [Using with Generic Thermostat](#using-with-generic-thermostat) section for a complete example.
 
 ### Timer (`number.luxeva_heater_00aa11bb22cc_timer`)
 
@@ -119,6 +120,23 @@ Read-only sensor updated every ~2 s directly from the device's `Hts` field. The 
 | Value | `0`–`540` minutes | Exact remaining minutes from the device; 0 = no active timer |
 
 Read-only sensor updated every ~2 s directly from the device's outTopic `Tmr` field. Useful in automations where minute-level precision matters (e.g. trigger when less than 10 minutes remain).
+
+### Actuator (`switch.luxeva_heater_00aa11bb22cc_actuator`)
+
+| Attribute | Values | Description |
+|---|---|---|
+| State | `on` / `off` | Mirrors the heater's power state (`Prg > 0` = on) |
+
+A plain on/off switch designed to serve as the `heater` entity in HA's [Generic Thermostat](https://www.home-assistant.io/integrations/generic_thermostat/) helper. Unlike the Climate entity, it presents the heater as a simple binary actuator, which is what Generic Thermostat expects.
+
+**Turn-on:** publishes `B<last_level>` (restores the last used heating level) then `T1` (arms a 1-hour safety countdown timer).
+**Turn-off:** publishes `T0` (cancels the timer) then `B0` (turns the heater off).
+
+**1-hour heartbeat:** when the device timer expires, the device turns itself off and the Actuator reports `off`. If a Generic Thermostat is in heating mode and the setpoint has not been reached, it calls turn-on again — restarting the 1-hour timer. This loop continues until the setpoint is reached or the Generic Thermostat is turned off. If the cloud MQTT connection drops instead, the device shuts off within one hour on its own without any input from HA.
+
+**External turn-on safety:** if the device is turned on via the physical remote or the Luxeva app while the Actuator is off, and no timer is active on the device, the Actuator automatically publishes `T1` to arm the safety timer. This ensures the cloud-loss safety property holds regardless of how the heater was started.
+
+> **Note:** when using the Actuator with Generic Thermostat, avoid controlling the heater directly via the Climate entity or Timer number entity at the same time. Generic Thermostat tracks the switch state independently, and direct commands from other entities can cause state inconsistencies.
 
 ---
 
@@ -150,6 +168,42 @@ automation:
 
 ---
 
+## Using with Generic Thermostat
+
+The **Actuator switch** is designed to act as the `heater` entity in HA's [Generic Thermostat](https://www.home-assistant.io/integrations/generic_thermostat/) helper. This is the recommended way to implement room-temperature-based control with the Luxeva heater.
+
+> **Why not use the Climate entity directly?** Generic Thermostat's `heater` parameter expects a switch entity — it calls `turn_on` and `turn_off` and tracks the switch state. The Luxeva Climate entity is a full climate entity and cannot be used as a Generic Thermostat heater. The Actuator switch bridges this gap.
+
+> **Which temperature sensor to use:** use a dedicated external room temperature sensor as `target_sensor`. Do **not** use the Climate entity's current temperature — the device's built-in sensor reads well above actual room temperature (see the note in the Climate entity section).
+
+### Configuration example
+
+```yaml
+climate:
+  - platform: generic_thermostat
+    name: "Living Room"
+    heater: switch.luxeva_heater_00aa11bb22cc_actuator
+    target_sensor: sensor.living_room_temperature   # external sensor, not the Luxeva Tmp
+    min_temp: 17
+    max_temp: 28
+    target_temp: 21
+    min_cycle_duration:
+      minutes: 5
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+```
+
+### How the 1-hour heartbeat works
+
+1. Generic Thermostat calls `turn_on` → Actuator sends `B<last_level>` + `T1` (heater on, 1-hour countdown armed)
+2. Device heats; Generic Thermostat monitors room temperature via the external sensor
+3. If the room reaches setpoint before the timer expires: Generic Thermostat calls `turn_off` → Actuator sends `T0` + `B0`
+4. If the timer expires before setpoint is reached: device turns itself off → Actuator reports `off` → Generic Thermostat calls `turn_on` again → 1-hour timer restarts
+
+**`min_cycle_duration`:** set this to at least 5 minutes. Without it, Generic Thermostat may re-trigger turn-on immediately when the timer expires, preventing the room temperature from stabilising between cycles. Adjust higher if the heater takes a long time to affect room temperature.
+
+---
+
 ## Availability
 
 The integration marks the device **unavailable** if no status message is received for **30 seconds**. The device normally publishes its state every ~2 seconds, so 30 seconds means it is genuinely unreachable (network loss, power cut, or cloud broker outage). The entity becomes available again automatically once messages resume — no restart needed.
@@ -170,7 +224,8 @@ Home Assistant
     ├── LuxevaClimate             ← climate entity (power, level, current temp)
     ├── LuxevaTimer               ← number entity (countdown timer, hours)
     ├── LuxevaTimerSensor         ← sensor entity (countdown timer, precise minutes)
-    └── LuxevaThermostatSensor    ← sensor entity (in-device thermostat state)
+    ├── LuxevaThermostatSensor    ← sensor entity (in-device thermostat state)
+    └── LuxevaActuatorSwitch      ← switch entity (actuator for Generic Thermostat)
 ```
 
 ### MQTT protocol
