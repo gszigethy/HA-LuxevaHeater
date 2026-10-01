@@ -1,27 +1,34 @@
-# CI quality baseline
+# Luxeva CI checks
 
-Checks run on pushes and pull requests with read-only repository permissions.
-GitHub Actions are pinned to immutable commits; Dependabot updates those pins.
+The workflow runs on pushes, pull requests and manual requests with read-only
+repository permissions. GitHub Action references are pinned to commits and
+maintained by Dependabot. The HACS and hassfest Actions still obtain their
+validator containers from upstream tags; the pins do not freeze those images.
 
-Python and extension JavaScript checks compare finding counts by file, rule and
-message against the PR base, ignoring line shifts. Existing findings remain
-visible; new findings fail CI. Pushes compare against the previous commit.
-Manual runs or new branches without a valid previous commit report the current
-baseline. Syntax, builds, tests and project validators remain strict.
+Python syntax, Ruff defect checks, hassfest and HACS file/schema validation are
+blocking. Ruff compares finding counts by file, rule and message against the PR
+base, ignoring line shifts. Pushes compare against the previous commit. Both
+revisions use the same explicit rules, ignore repository Ruff configuration and
+scan gitignored Python files too. Existing findings remain visible; new findings
+fail CI. Manual runs or new branches without a valid previous commit report the
+current baseline.
 
-Type checks, Perl::Critic and Prettier begin as nonblocking diagnostic steps.
-Their failures appear in Actions logs; they are not claimed as passing gates.
-Tighten them after reviewing and fixing the legacy baseline. Luxeva has no
-runtime test suite yet; syntax/HACS/hassfest do not replace behavioral tests.
-The irrigation coverage report is informational, without a fabricated target.
+Mypy begins as a nonblocking diagnostic with missing third-party imports skipped.
+It is not a complete Home Assistant type check. There is no runtime test suite
+yet; syntax, lint, hassfest and HACS do not replace behavioral tests.
 
-ESP32 clang-format checks only changed lines in first-party C/C++ on PRs.
-Firmware size builds both PR and base, reports binary growth and flash/RAM
-usage, and leaves capacity enforcement to the real firmware build.
+## Analyzer dependencies
 
-Choose required checks in branch rules only after the first CI results are
-reviewed. These changes do not configure external Sonar accounts or branch
-rules, and do not merge themselves.
+`.github/ci/requirements.in` lists the direct analyzer versions. The generated
+`requirements.txt` pins every dependency and its allowed artifact hashes for
+Python 3.13. CI installs wheels only and verifies their hashes.
+
+To update the lock file, use a local `uv` installation:
+
+```sh
+uv pip compile --python-version 3.13 --generate-hashes --only-binary :all: \
+  --no-emit-index-url .github/ci/requirements.in -o .github/ci/requirements.txt
+```
 
 ## HACS publishing requirements
 
