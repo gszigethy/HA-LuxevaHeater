@@ -43,7 +43,9 @@ def _normalize_mac(raw: str) -> str | None:
     return None
 
 
-class LuxevaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+# Home Assistant consumes ``domain`` in ConfigFlow.__init_subclass__ at runtime.
+# Its type cannot be resolved when mypy deliberately skips Home Assistant imports.
+class LuxevaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle the UI config flow for Luxeva Heater."""
 
     VERSION = 1
