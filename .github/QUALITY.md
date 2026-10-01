@@ -22,3 +22,9 @@ usage, and leaves capacity enforcement to the real firmware build.
 Choose required checks in branch rules only after the first CI results are
 reviewed. These changes do not configure external Sonar accounts or branch
 rules, and do not merge themselves.
+
+## HACS publishing requirements
+
+HACS file/schema checks are blocking. Repository publishing checks for license,
+description and topics are skipped pending repository owner configuration.
+A license must be chosen by the owner; this PR does not assign one.
