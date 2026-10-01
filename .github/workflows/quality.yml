@@ -1,0 +1,46 @@
+name: Quality baseline
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      QUALITY_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Normalize comparison base
+        run: |
+          if [ -z "$QUALITY_BASE" ] || ! git cat-file -e "$QUALITY_BASE^{commit}" 2>/dev/null; then
+            echo "QUALITY_BASE=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Install analysis tools
+        run: python -m pip install 'ruff==0.12.12' 'mypy==1.17.1'
+      - name: Python syntax
+        run: python -m compileall -q custom_components
+      - name: Block new Python defects
+        run: python .github/ci/lint_baseline.py ruff ruff check --select E9,F63,F7,F82 --output-format json custom_components
+      - name: Python type diagnostics (initial baseline report)
+        continue-on-error: true
+        run: mypy --ignore-missing-imports --follow-imports skip custom_components
+
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: home-assistant/actions/hassfest@06749dd8c0b54f350bc69c8752456cee498808a3 # master
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main
+        with:
+          category: integration
