@@ -1,7 +1,7 @@
 # Luxeva Heater
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
-[![HA Version](https://img.shields.io/badge/Home%20Assistant-2024.3%2B-blue)](https://home-assistant.io)
+[![HA Version](https://img.shields.io/badge/Home%20Assistant-2025.3%2B-blue)](https://home-assistant.io)
 [![IoT Class](https://img.shields.io/badge/IoT%20Class-Cloud%20Push-green)](https://developers.home-assistant.io/docs/creating_integration_manifest#iot-class)
 
 Control and monitor your **Luxeva WiFi infrared carbon heater** from Home Assistant. The integration connects to Luxeva's cloud MQTT broker and provides real-time two-way control — changes made on the physical remote are reflected in HA instantly, and HA commands take effect immediately.
@@ -37,7 +37,7 @@ Use HA's energy dashboard together with a smart plug on the heater circuit. The 
 
 ## Requirements
 
-- Home Assistant 2024.3 or newer
+- Home Assistant 2025.3 or newer
 - The Luxeva heater must be connected to the Luxeva mobile app (Wi-Fi provisioning done via the app)
 - The device MAC address (from the label on the unit)
 
@@ -146,24 +146,24 @@ A plain on/off switch designed to serve as the `heater` entity in HA's [Generic 
 # Set Level 3 and a 2-hour timer every weekday morning
 # (setting the timer also turns the heater on if it was off)
 automation:
-  alias: "Morning warmup"
-  trigger:
-    - platform: time
-      at: "06:30:00"
-  condition:
-    - condition: time
-      weekday: [mon, tue, wed, thu, fri]
-  action:
-    - service: climate.set_preset_mode
-      target:
-        entity_id: climate.luxeva_heater_00aa11bb22cc
-      data:
-        preset_mode: "Level 3"
-    - service: number.set_value
-      target:
-        entity_id: number.luxeva_heater_00aa11bb22cc_timer
-      data:
-        value: 2
+  - alias: "Morning warmup"
+    triggers:
+      - trigger: time
+        at: "06:30:00"
+    conditions:
+      - condition: time
+        weekday: [mon, tue, wed, thu, fri]
+    actions:
+      - action: climate.set_preset_mode
+        target:
+          entity_id: climate.luxeva_heater_00aa11bb22cc
+        data:
+          preset_mode: "Level 3"
+      - action: number.set_value
+        target:
+          entity_id: number.luxeva_heater_00aa11bb22cc_timer
+        data:
+          value: 2
 ```
 
 ---
