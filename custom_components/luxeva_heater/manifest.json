@@ -14,7 +14,7 @@
     "paho"
   ],
   "requirements": [
-    "paho-mqtt>=1.6.1"
+    "paho-mqtt>=2.0.0"
   ],
   "version": "1.1.0"
 }
