@@ -32,6 +32,8 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements_test.txt
 
       - name: Install test and analysis dependencies
         run: python -m pip install -r requirements_test.txt
@@ -48,7 +50,7 @@ jobs:
 
       - name: Unit tests with coverage
         run: |
-          pytest tests/ -v             --cov=custom_components/luxeva_heater             --cov-branch             --cov-report=term-missing             --cov-report=xml:coverage.xml             --cov-fail-under=50
+          pytest tests/ -v             --cov=custom_components/luxeva_heater             --cov-branch             --cov-report=term-missing             --cov-report=xml:coverage.xml             --cov-fail-under=70
 
       - name: SonarQube Cloud analysis
         if: env.SONAR_TOKEN != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
