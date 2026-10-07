@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 20
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
