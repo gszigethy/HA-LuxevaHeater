@@ -29,12 +29,8 @@ type LuxevaConfigEntry = ConfigEntry["LuxevaCoordinator"]
 
 
 def _make_mqtt_client(client_id: str) -> mqtt.Client:
-    """Create a paho Client compatible with both paho-mqtt 1.x and 2.x."""
-    try:
-        from paho.mqtt.client import CallbackAPIVersion  # type: ignore[attr-defined]
-        return mqtt.Client(CallbackAPIVersion.VERSION1, client_id=client_id)
-    except (ImportError, AttributeError):
-        return mqtt.Client(client_id=client_id)
+    """Create a paho Client using the paho-mqtt 2.x callback API."""
+    return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
 
 
 class LuxevaCoordinator:
@@ -56,6 +52,8 @@ class LuxevaCoordinator:
         self._client: mqtt.Client | None = None
         self._listeners: list[Callable[[], None]] = []
         self._availability_unsub: Callable[[], None] | None = None
+        # Set once disconnect starts; late paho callbacks are dropped from then on.
+        self._stopping = False
 
         # Last active heating level (1–6); shared across entities so the timer
         # can turn the heater on at the right level without knowing about climate.
@@ -98,15 +96,24 @@ class LuxevaCoordinator:
 
         return _remove
 
+    @callback
     def _notify_listeners(self) -> None:
-        """Thread-safe: schedule listener calls on the HA event loop (paho thread → HA loop)."""
-        for listener in list(self._listeners):
-            self.hass.loop.call_soon_threadsafe(listener)
-
-    def _notify_listeners_on_loop(self) -> None:
-        """Call listeners directly — use only when already running on the HA event loop."""
+        """Call listeners. Must be called on the HA event loop."""
         for listener in list(self._listeners):
             listener()
+
+    def _call_on_loop(self, func: Callable[..., None], *args: Any) -> None:
+        """Schedule func on the HA event loop from paho's thread.
+
+        Dropped once disconnect has started, and when the loop is already
+        closed during Home Assistant shutdown.
+        """
+        if self._stopping:
+            return
+        try:
+            self.hass.loop.call_soon_threadsafe(func, *args)
+        except RuntimeError:
+            _LOGGER.debug("Luxeva: event loop closed; dropping MQTT callback")
 
     # ------------------------------------------------------------------
     # Availability watchdog (all methods run on the HA event loop)
@@ -136,8 +143,27 @@ class LuxevaCoordinator:
         )
         self._availability_unsub = None
         self.data["available"] = False
-        # Already on HA loop — call directly, no need for call_soon_threadsafe.
-        self._notify_listeners_on_loop()
+        self._notify_listeners()
+
+    @callback
+    def _set_unavailable(self) -> None:
+        """Connection lost or refused. Must be called on HA loop."""
+        # No point counting down when we know the connection is gone.
+        self._disarm_watchdog()
+        self.data["available"] = False
+        self._notify_listeners()
+
+    @callback
+    def _handle_status(self, parsed: dict[str, Any]) -> None:
+        """Apply a parsed status message. Must be called on HA loop."""
+        if self._stopping:
+            return
+        self.data.update(parsed)
+        self.data["available"] = True
+        if parsed["prg"] > 0:
+            self.last_level = parsed["prg"]
+        self._arm_watchdog()
+        self._notify_listeners()
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -164,37 +190,55 @@ class LuxevaCoordinator:
 
     async def async_disconnect(self) -> None:
         """Disconnect from the MQTT broker and cancel the watchdog."""
+        self._stopping = True
         self._disarm_watchdog()
         if self._client is not None:
             await self.hass.async_add_executor_job(self._disconnect)
 
     def _disconnect(self) -> None:
         if self._client is not None:
-            self._client.loop_stop()
+            # Send DISCONNECT while the network loop is still running.
             self._client.disconnect()
+            self._client.loop_stop()
             self._client = None
 
     # ------------------------------------------------------------------
     # paho callbacks (run in paho's internal thread)
+    #
+    # These never touch coordinator state directly; every change is handed
+    # to the HA event loop so entities never observe a half-applied update.
     # ------------------------------------------------------------------
 
-    def _on_connect(self, client: mqtt.Client, userdata: Any, flags: Any, rc: int) -> None:
-        if rc == 0:
+    def _on_connect(
+        self,
+        client: mqtt.Client,
+        userdata: Any,
+        flags: Any,
+        reason_code: Any,
+        properties: Any,
+    ) -> None:
+        if not reason_code.is_failure:
             _LOGGER.debug("Luxeva: connected to %s:%s", self.broker, self.port)
             client.subscribe(self.out_topic)
             # Stay unavailable until the first status message arrives;
             # a bare TCP connection without data doesn't prove the device is reachable.
         else:
-            _LOGGER.warning("Luxeva: MQTT connect failed (rc=%d)", rc)
-            self.data["available"] = False
-            self._notify_listeners()
+            _LOGGER.warning("Luxeva: MQTT connect failed (%s)", reason_code)
+            self._call_on_loop(self._set_unavailable)
 
-    def _on_disconnect(self, client: mqtt.Client, userdata: Any, rc: int) -> None:
-        _LOGGER.warning("Luxeva: disconnected (rc=%d); paho will attempt reconnect", rc)
-        self.data["available"] = False
-        # Disarm watchdog — no point counting down when we know the connection is gone.
-        self.hass.loop.call_soon_threadsafe(self._disarm_watchdog)
-        self._notify_listeners()
+    def _on_disconnect(
+        self,
+        client: mqtt.Client,
+        userdata: Any,
+        flags: Any,
+        reason_code: Any,
+        properties: Any,
+    ) -> None:
+        if self._stopping:
+            _LOGGER.debug("Luxeva: disconnected (%s)", reason_code)
+            return
+        _LOGGER.warning("Luxeva: disconnected (%s); paho will attempt reconnect", reason_code)
+        self._call_on_loop(self._set_unavailable)
 
     def _on_message(self, client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> None:
         try:
@@ -202,13 +246,7 @@ class LuxevaCoordinator:
             _LOGGER.debug("Luxeva outTopic: %s", payload)
             parsed = _parse_status(payload)
             if parsed:
-                self.data.update(parsed)
-                self.data["available"] = True
-                if parsed["prg"] > 0:
-                    self.last_level = parsed["prg"]
-                # Reset the 30-second watchdog on the HA event loop.
-                self.hass.loop.call_soon_threadsafe(self._arm_watchdog)
-                self._notify_listeners()
+                self._call_on_loop(self._handle_status, parsed)
             else:
                 _LOGGER.warning("Luxeva: unrecognised message format: %s", payload)
         except Exception as exc:

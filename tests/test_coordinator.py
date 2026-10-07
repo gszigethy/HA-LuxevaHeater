@@ -1,11 +1,24 @@
 """Tests for the Luxeva Heater MQTT coordinator."""
 
+import asyncio
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, call
+import warnings
 
 import paho.mqtt.client as mqtt
+from paho.mqtt.packettypes import PacketTypes
+from paho.mqtt.reasoncodes import ReasonCode
 
-from custom_components.luxeva_heater.coordinator import LuxevaCoordinator, _parse_status
+from custom_components.luxeva_heater.coordinator import (
+    LuxevaCoordinator,
+    _make_mqtt_client,
+    _parse_status,
+)
+
+CONNACK_OK = ReasonCode(PacketTypes.CONNACK, "Success")
+CONNACK_REFUSED = ReasonCode(PacketTypes.CONNACK, "Not authorized")
+DISCONNECT_ERROR = ReasonCode(PacketTypes.DISCONNECT, "Unspecified error")
+STATUS = SimpleNamespace(payload=b"Msg 99, Prg 4, Tmp 23, Hts 26, Tmr 02:15")
 
 
 class ImmediateLoop:
@@ -20,6 +33,9 @@ class FakeHass:
 
     def __init__(self) -> None:
         self.loop = ImmediateLoop()
+
+    async def async_add_executor_job(self, target, *args):
+        return target(*args)
 
 
 def make_coordinator() -> LuxevaCoordinator:
@@ -70,12 +86,12 @@ def test_on_connect_subscribes_and_failed_connect_notifies() -> None:
     listener = Mock()
     coordinator.add_listener(listener)
 
-    coordinator._on_connect(client, None, None, 0)
+    coordinator._on_connect(client, None, None, CONNACK_OK, None)
     client.subscribe.assert_called_once_with(coordinator.out_topic)
     listener.assert_not_called()
 
     coordinator.data["available"] = True
-    coordinator._on_connect(client, None, None, 5)
+    coordinator._on_connect(client, None, None, CONNACK_REFUSED, None)
     assert coordinator.data["available"] is False
     listener.assert_called_once_with()
 
@@ -87,10 +103,7 @@ def test_on_message_updates_state_and_last_level(monkeypatch) -> None:
     arm_watchdog = Mock()
     monkeypatch.setattr(coordinator, "_arm_watchdog", arm_watchdog)
 
-    message = SimpleNamespace(
-        payload=b"Msg 99, Prg 4, Tmp 23, Hts 26, Tmr 02:15"
-    )
-    coordinator._on_message(Mock(), None, message)
+    coordinator._on_message(Mock(), None, STATUS)
 
     assert coordinator.data == {
         "available": True,
@@ -131,7 +144,7 @@ def test_disconnect_marks_unavailable_and_notifies(monkeypatch) -> None:
     disarm = Mock()
     monkeypatch.setattr(coordinator, "_disarm_watchdog", disarm)
 
-    coordinator._on_disconnect(Mock(), None, 1)
+    coordinator._on_disconnect(Mock(), None, None, DISCONNECT_ERROR, None)
 
     assert coordinator.data["available"] is False
     disarm.assert_called_once_with()
@@ -159,3 +172,62 @@ def test_publish_when_disconnected() -> None:
     coordinator.publish("B3")
 
     client.publish.assert_not_called()
+
+
+def test_client_uses_current_callback_api() -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        client = _make_mqtt_client("00AA11BB22CC")
+    assert client._callback_api_version == mqtt.CallbackAPIVersion.VERSION2
+
+
+def test_messages_after_disconnect_are_ignored(monkeypatch) -> None:
+    coordinator = make_coordinator()
+    listener = Mock()
+    coordinator.add_listener(listener)
+    arm_watchdog = Mock()
+    monkeypatch.setattr(coordinator, "_arm_watchdog", arm_watchdog)
+    client = Mock()
+    coordinator._client = client
+
+    asyncio.run(coordinator.async_disconnect())
+    # paho may still deliver callbacks until its network loop has stopped.
+    coordinator._on_message(Mock(), None, STATUS)
+    coordinator._on_disconnect(client, None, None, DISCONNECT_ERROR, None)
+
+    assert client.mock_calls == [call.disconnect(), call.loop_stop()]
+    assert coordinator._client is None
+    assert coordinator.data["available"] is False
+    arm_watchdog.assert_not_called()
+    listener.assert_not_called()
+
+
+def test_status_queued_before_disconnect_is_ignored(monkeypatch) -> None:
+    coordinator = make_coordinator()
+    listener = Mock()
+    coordinator.add_listener(listener)
+    queued = []
+    coordinator.hass.loop = SimpleNamespace(
+        call_soon_threadsafe=lambda func, *args: queued.append((func, args))
+    )
+    arm_watchdog = Mock()
+    monkeypatch.setattr(coordinator, "_arm_watchdog", arm_watchdog)
+
+    coordinator._on_message(Mock(), None, STATUS)
+    asyncio.run(coordinator.async_disconnect())
+    for func, args in queued:
+        func(*args)
+
+    assert coordinator.data["available"] is False
+    arm_watchdog.assert_not_called()
+    listener.assert_not_called()
+
+
+def test_callbacks_after_loop_closed_do_not_raise() -> None:
+    coordinator = make_coordinator()
+    loop = asyncio.new_event_loop()
+    loop.close()
+    coordinator.hass.loop = loop
+
+    coordinator._on_disconnect(Mock(), None, None, DISCONNECT_ERROR, None)
+    coordinator._on_message(Mock(), None, STATUS)
