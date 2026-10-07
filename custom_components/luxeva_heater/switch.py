@@ -6,9 +6,10 @@ heater entity in a Generic Thermostat helper.
 Turn-on: publishes B<last_level> then T1 (arms a 1-hour safety countdown).
 Turn-off: publishes T0 then B0.
 
-Option-B safety: if the device is turned on externally (physical remote or
-Luxeva app) without an active timer, the switch auto-publishes T1 to ensure
-the cloud-loss safety property holds regardless of how the heater was started.
+Option-B safety: whenever the device turns on without an active timer
+(physical remote, Luxeva app or another entity), the switch auto-publishes T1
+to ensure the cloud-loss safety property holds regardless of how the heater
+was started.
 """
 from __future__ import annotations
 
@@ -46,9 +47,9 @@ class LuxevaActuatorSwitch(SwitchEntity):
     connection drops instead, the device shuts off within one hour on its own
     — without any action from HA.
 
-    External turn-on safety (Option B): if the device transitions from off to
-    on via the physical remote or app and no timer is active, this switch
-    auto-publishes T1 so the safety property holds unconditionally.
+    External turn-on safety (Option B): whenever the device transitions from
+    off to on and no timer is active, this switch auto-publishes T1 so the
+    safety property holds unconditionally.
     """
 
     _attr_has_entity_name = True
@@ -64,7 +65,6 @@ class LuxevaActuatorSwitch(SwitchEntity):
         )
         self._remove_listener: Callable[[], None] | None = None
         self._prev_prg: int = 0
-        self._ha_turn_on_pending: bool = False
 
     async def async_added_to_hass(self) -> None:
         self._remove_listener = self._coordinator.add_listener(self._handle_update)
@@ -83,19 +83,18 @@ class LuxevaActuatorSwitch(SwitchEntity):
             # Reset stale state on disconnect so the next prg 0→>0 transition
             # is detected cleanly after reconnect, regardless of what happened
             # to the device while HA was disconnected.
-            self._ha_turn_on_pending = False
             self._prev_prg = 0
         else:
-            if prg > 0 and self._prev_prg == 0:
-                if self._ha_turn_on_pending:
-                    # Our own turn_on confirmed by device — clear the flag.
-                    self._ha_turn_on_pending = False
-                elif tmr == "00:00":
-                    # Device turned on externally without a timer — arm safety timer.
-                    _LOGGER.debug(
-                        "Luxeva actuator: external turn-on without active timer — arming T1"
-                    )
-                    self._coordinator.publish("T1")
+            # Any off→on transition without a running timer gets T1, whoever
+            # started the heater. Our own turn_on already sent T1, so a status
+            # that races ahead of it only re-sends the same 1-hour timer; no
+            # "own turn-on" flag is kept because a stale flag would suppress
+            # the safety timer for a later external turn-on.
+            if prg > 0 and self._prev_prg == 0 and tmr == "00:00":
+                _LOGGER.debug(
+                    "Luxeva actuator: turn-on without active timer — arming T1"
+                )
+                self._coordinator.publish("T1")
             self._prev_prg = prg
 
         self.async_write_ha_state()
@@ -113,7 +112,6 @@ class LuxevaActuatorSwitch(SwitchEntity):
             "Luxeva actuator: turning on at level %d with 1-hour timer",
             self._coordinator.last_level,
         )
-        self._ha_turn_on_pending = True
         self._coordinator.publish(f"B{self._coordinator.last_level}")
         self._coordinator.publish("T1")
 
