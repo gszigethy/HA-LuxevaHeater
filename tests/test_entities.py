@@ -1,8 +1,6 @@
 """Tests for Luxeva Heater entities."""
 
 import asyncio
-from unittest.mock import Mock
-
 from homeassistant.components.climate import HVACAction, HVACMode
 
 from custom_components.luxeva_heater.climate import LuxevaClimate
