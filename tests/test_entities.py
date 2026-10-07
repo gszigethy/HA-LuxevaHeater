@@ -158,11 +158,56 @@ def test_actuator_resets_transition_state_when_unavailable(monkeypatch) -> None:
         lambda self: None,
     )
     actuator._prev_prg = 4
-    actuator._ha_turn_on_pending = True
     coordinator.data.update(available=False, prg=4)
 
     actuator._handle_update()
 
     assert actuator.available is False
     assert actuator._prev_prg == 0
-    assert actuator._ha_turn_on_pending is False
+
+
+def test_actuator_turn_on_while_already_on_keeps_safety_timer(monkeypatch) -> None:
+    coordinator = FakeCoordinator()
+    actuator = LuxevaActuatorSwitch(coordinator)
+    monkeypatch.setattr(
+        LuxevaActuatorSwitch,
+        "async_write_ha_state",
+        lambda self: None,
+    )
+    coordinator.data.update(prg=2, tmr="00:30")
+    actuator._handle_update()
+
+    # turn_on while the heater is already running produces no off -> on
+    # transition to confirm it.
+    asyncio.run(actuator.async_turn_on())
+    coordinator.data.update(prg=2, tmr="01:00")
+    actuator._handle_update()
+
+    # Later external off -> on without a timer must still arm T1.
+    coordinator.data.update(prg=0, tmr="00:00")
+    actuator._handle_update()
+    coordinator.commands.clear()
+    coordinator.data.update(prg=3, tmr="00:00")
+    actuator._handle_update()
+
+    assert coordinator.commands == ["T1"]
+
+
+def test_actuator_dropped_turn_on_keeps_safety_timer(monkeypatch) -> None:
+    coordinator = FakeCoordinator()
+    actuator = LuxevaActuatorSwitch(coordinator)
+    monkeypatch.setattr(
+        LuxevaActuatorSwitch,
+        "async_write_ha_state",
+        lambda self: None,
+    )
+
+    # turn_on whose commands never reach the device.
+    asyncio.run(actuator.async_turn_on())
+    coordinator.commands.clear()
+
+    # External turn-on without a timer must still arm T1.
+    coordinator.data.update(prg=3, tmr="00:00")
+    actuator._handle_update()
+
+    assert coordinator.commands == ["T1"]
