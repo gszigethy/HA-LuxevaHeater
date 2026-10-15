@@ -17,6 +17,7 @@ class FakeCoordinator:
 
     def __init__(self) -> None:
         self.client_id = "00AA11BB22CC"
+        self.device_name = "Luxeva Heater 00AA11BB22CC"
         self.last_level = 3
         self.data = {
             "available": True,
@@ -211,3 +212,18 @@ def test_actuator_dropped_turn_on_keeps_safety_timer(monkeypatch) -> None:
     actuator._handle_update()
 
     assert coordinator.commands == ["T1"]
+
+
+def test_new_sensors_take_their_translated_names() -> None:
+    from custom_components.luxeva_heater.sensor import (
+        LuxevaInternalTemperature,
+        LuxevaSessionSensor,
+    )
+
+    # HA ignores translation_key names whenever _attr_name exists anywhere in
+    # the class hierarchy; the entity then shows only the device name.
+    coordinator = FakeCoordinator()
+    for cls in (LuxevaInternalTemperature, LuxevaSessionSensor):
+        sensor = cls(coordinator)
+        assert sensor.translation_key
+        assert not hasattr(sensor, "_attr_name"), cls.__name__

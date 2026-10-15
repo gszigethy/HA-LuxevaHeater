@@ -2,13 +2,19 @@
   "config": {
     "step": {
       "user": {
-        "title": "Luxeva hősugárzó beállítása",
-        "description": "Adja meg a Luxeva hősugárzón lévő matricán feltüntetett MAC-címet (pl. `00:AA:11:BB:22:CC`). Az integráció automatikusan csatlakozik a Luxeva felhőszerveréhez.",
+        "title": "Luxeva hozzáadása",
+        "description": "Minden fűtőtestet külön MAC-címmel adjon hozzá. A helyi MQTT-szolgáltatást több fűtőtest is használhatja.",
+        "menu_options": {
+          "heater": "Fűtőtest",
+          "local_service": "Helyi MQTT-szolgáltatás"
+        }
+      },
+      "heater": {
+        "title": "Fűtőtest hozzáadása",
+        "description": "Adja meg a fűtőtesten található MAC-címet. Minden fűtőtestet külön adjon hozzá.",
         "data": {
-          "mac": "Eszköz MAC-cím"
-        },
-        "data_description": {
-          "mac": "Az eszközön lévő matricán található (formátum: XX:XX:XX:XX:XX:XX vagy XXXXXXXXXXXX)"
+          "mac": "Eszköz MAC-címe",
+          "name": "Név (például Terasz vagy Pergola)"
         }
       },
       "disclaimer": {
@@ -17,14 +23,161 @@
         "data": {
           "disclaimer_accepted": "Elolvastam és teljes egészében megértettem ezt a nyilatkozatot, és önként elfogadom az összes kapcsolódó kockázatot és feltételt."
         }
+      },
+      "settings": {
+        "title": "Fűtésvezérlés és biztonság",
+        "description": "Válasszon egyetlen fűtésvezérlőt. A Luxeva klímavezérléshez válasszon szobai érzékelőt, vagy hagyja üresen a kézi teljesítményvezérléshez. Váltás előtt kapcsolja ki az ezt a fűtőtestet vezérlő Generic Thermostat segédet. Az aktuátor mód külső termosztátsegédhez való. A mentés lezárja a fűtési munkamenetet és kikapcsolja a fűtést. Helyi vezérléshez először külön helyi MQTT-szolgáltatást adjon hozzá. A tápellátást megszakító kapcsoló külön, megfelelő terhelhetőségű eszköz legyen; az integráció soha nem kapcsolja vissza automatikusan.",
+        "data": {
+          "control_mode": "Fűtés vezérlője",
+          "connection": "Kapcsolat",
+          "local_service": "Helyi MQTT-szolgáltatás",
+          "temperature_sensor": "Külső szobahőmérséklet-érzékelő (nem kötelező)",
+          "power_switch": "Tápellátást megszakító kapcsoló (nem kötelező)",
+          "tolerance": "Hőmérséklet-tűrés (°C)",
+          "minimum_cycle_seconds": "Minimális kapcsolási idő (másodperc)",
+          "sensor_timeout_minutes": "Érzékelőadat maximális kora (perc; 0: nincs korhatár)",
+          "protect_external_starts": "Biztonsági időzítő alkalmazása távirányítós vagy alkalmazásból történő indításkor"
+        },
+        "data_description": {
+          "sensor_timeout_minutes": "A fűtés leáll, ha az érzékelő ennyi ideig nem küld adatot. Az ismétlődő azonos értékek frissnek számítanak. Állítsa hosszabbra az érzékelő leghosszabb csendes időszakánál; a 0 kikapcsolja az ellenőrzést (nem ajánlott)."
+        }
+      },
+      "local_service": {
+        "title": "Helyi MQTT-szolgáltatás",
+        "description": "Egyszer állítsa be, majd válassza ki több fűtőtesthez. HA OS alatt a szokásos belső cím core-mosquitto. Az automatikus előkészítés Supervisor-t igényel és megőrzi a többi belépési adatot, de újraindíthatja a Mosquitto brókert. Más telepítésnél használjon meglévő brókert. A Home Assistant a fűtőtest rögzített belépési adataival csatlakozik, ezért a brókernek el kell fogadnia; az alábbi jelölőnégyzet hozzáadja. Az iot.luxeva.com.tr nevet a hálózati DNS-ben irányítsa a bróker LAN-címére. A sikeres brókerellenőrzés még nem igazolja az eszköz átirányítását. Egyéni ACL-ben engedélyezze a MAC-alapú inTopic, outTopic és OTA_Ready témákat.",
+        "data": {
+          "broker": "MQTT-kiszolgáló neve vagy IP-címe",
+          "port": "MQTT-port",
+          "prepare_mosquitto": "Mosquitto telepítése/beállítása és az eszköz belépési adatainak létrehozása (újraindíthatja a brókert)"
+        },
+        "data_description": {
+          "prepare_mosquitto": "Ha a Mosquitto már telepítve van, csak a fűtőtest belépési adatait adja hozzá, ha hiányoznak, a többi felhasználót és beállítást megtartja."
+        }
+      },
+      "prepare": {
+        "title": "Helyi MQTT ellenőrzése"
       }
     },
     "error": {
-      "invalid_mac": "Érvénytelen MAC-cím. Használja a XX:XX:XX:XX:XX:XX formátumot (pl. 00:AA:11:BB:22:CC).",
-      "disclaimer_not_accepted": "A folytatáshoz el kell olvasnia és el kell fogadnia a nyilatkozatot."
+      "invalid_mac": "Érvénytelen MAC-cím.",
+      "disclaimer_not_accepted": "A folytatáshoz fogadja el a nyilatkozatot.",
+      "local_service_required": "Először adjon hozzá helyi MQTT-szolgáltatást, majd válassza ki itt.",
+      "invalid_power_switch": "Külön tápellátási kapcsolót válasszon, ne Luxeva aktuátort.",
+      "cannot_connect": "Nem sikerült bejelentkezni a brókerbe. Ellenőrizze a címét és portját, hogy fut-e, és hogy elfogadja-e a fűtőtest belépési adatait (az alábbi Mosquitto opció hozzáadja).",
+      "broker_setup_failed": "Nem sikerült előkészíteni a Mosquitto brókert. Ellenőrizze a Supervisor-t, a naplókat és a meglévő felhasználókat, vagy állítsa be kézzel.",
+      "reset_safety_first": "A tápellátási kapcsoló módosítása vagy eltávolítása előtt oldja fel a biztonsági leállítást.",
+      "broker_in_use": "Ehhez a bróker címhez és porthoz már tartozik helyi MQTT szolgáltatás."
     },
     "abort": {
-      "already_configured": "Ez az eszköz már be van állítva."
+      "already_configured": "Ez az eszköz vagy szolgáltatás már be van állítva."
+    },
+    "progress": {
+      "prepare_broker": "Mosquitto előkészítése kérés esetén, majd MQTT-hitelesítés ellenőrzése. Ez néhány percig tarthat."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fűtésvezérlés és biztonság",
+        "description": "Válasszon egyetlen fűtésvezérlőt. A Luxeva klímavezérléshez válasszon szobai érzékelőt, vagy hagyja üresen a kézi teljesítményvezérléshez. Váltás előtt kapcsolja ki az ezt a fűtőtestet vezérlő Generic Thermostat segédet. Az aktuátor mód külső termosztátsegédhez való. A mentés lezárja a fűtési munkamenetet és kikapcsolja a fűtést. Helyi vezérléshez először külön helyi MQTT-szolgáltatást adjon hozzá. A tápellátást megszakító kapcsoló külön, megfelelő terhelhetőségű eszköz legyen; az integráció soha nem kapcsolja vissza automatikusan.",
+        "data": {
+          "control_mode": "Fűtés vezérlője",
+          "connection": "Kapcsolat",
+          "local_service": "Helyi MQTT-szolgáltatás",
+          "temperature_sensor": "Külső szobahőmérséklet-érzékelő (nem kötelező)",
+          "power_switch": "Tápellátást megszakító kapcsoló (nem kötelező)",
+          "tolerance": "Hőmérséklet-tűrés (°C)",
+          "minimum_cycle_seconds": "Minimális kapcsolási idő (másodperc)",
+          "sensor_timeout_minutes": "Érzékelőadat maximális kora (perc; 0: nincs korhatár)",
+          "protect_external_starts": "Biztonsági időzítő alkalmazása távirányítós vagy alkalmazásból történő indításkor"
+        },
+        "data_description": {
+          "sensor_timeout_minutes": "A fűtés leáll, ha az érzékelő ennyi ideig nem küld adatot. Az ismétlődő azonos értékek frissnek számítanak. Állítsa hosszabbra az érzékelő leghosszabb csendes időszakánál; a 0 kikapcsolja az ellenőrzést (nem ajánlott)."
+        }
+      },
+      "local_service": {
+        "title": "Helyi MQTT-szolgáltatás",
+        "description": "Egyszer állítsa be, majd válassza ki több fűtőtesthez. HA OS alatt a szokásos belső cím core-mosquitto. Az automatikus előkészítés Supervisor-t igényel és megőrzi a többi belépési adatot, de újraindíthatja a Mosquitto brókert. Más telepítésnél használjon meglévő brókert. A Home Assistant a fűtőtest rögzített belépési adataival csatlakozik, ezért a brókernek el kell fogadnia; az alábbi jelölőnégyzet hozzáadja. Az iot.luxeva.com.tr nevet a hálózati DNS-ben irányítsa a bróker LAN-címére. A sikeres brókerellenőrzés még nem igazolja az eszköz átirányítását. Egyéni ACL-ben engedélyezze a MAC-alapú inTopic, outTopic és OTA_Ready témákat.",
+        "data": {
+          "broker": "MQTT-kiszolgáló neve vagy IP-címe",
+          "port": "MQTT-port",
+          "prepare_mosquitto": "Mosquitto telepítése/beállítása és az eszköz belépési adatainak létrehozása (újraindíthatja a brókert)"
+        },
+        "data_description": {
+          "prepare_mosquitto": "Ha a Mosquitto már telepítve van, csak a fűtőtest belépési adatait adja hozzá, ha hiányoznak, a többi felhasználót és beállítást megtartja."
+        }
+      },
+      "prepare": {
+        "title": "Helyi MQTT ellenőrzése"
+      }
+    },
+    "error": {
+      "invalid_mac": "Érvénytelen MAC-cím.",
+      "disclaimer_not_accepted": "A folytatáshoz fogadja el a nyilatkozatot.",
+      "local_service_required": "Először adjon hozzá helyi MQTT-szolgáltatást, majd válassza ki itt.",
+      "invalid_power_switch": "Külön tápellátási kapcsolót válasszon, ne Luxeva aktuátort.",
+      "cannot_connect": "Nem sikerült bejelentkezni a brókerbe. Ellenőrizze a címét és portját, hogy fut-e, és hogy elfogadja-e a fűtőtest belépési adatait (az alábbi Mosquitto opció hozzáadja).",
+      "broker_setup_failed": "Nem sikerült előkészíteni a Mosquitto brókert. Ellenőrizze a Supervisor-t, a naplókat és a meglévő felhasználókat, vagy állítsa be kézzel.",
+      "reset_safety_first": "A tápellátási kapcsoló módosítása vagy eltávolítása előtt oldja fel a biztonsági leállítást.",
+      "broker_in_use": "Ehhez a bróker címhez és porthoz már tartozik helyi MQTT szolgáltatás."
+    },
+    "progress": {
+      "prepare_broker": "Mosquitto előkészítése kérés esetén, majd MQTT-hitelesítés ellenőrzése. Ez néhány percig tarthat."
+    }
+  },
+  "selector": {
+    "control_mode": {
+      "options": {
+        "compatibility": "Kompatibilitás — az 1.x működés megőrzése",
+        "climate": "Luxeva klímavezérlés — szobatermosztát vagy kézi vezérlés",
+        "actuator": "Aktuátor — külső termosztátsegéd"
+      }
+    },
+    "connection": {
+      "options": {
+        "cloud": "Luxeva felhő",
+        "local": "Helyi MQTT-szolgáltatás"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "safety_shutdown": {
+        "name": "Biztonsági leállítás"
+      },
+      "reset_safety_shutdown": {
+        "name": "Biztonsági leállítás feloldása"
+      }
+    },
+    "binary_sensor": {
+      "safety_shutdown": {
+        "name": "Biztonsági leállítás aktív"
+      }
+    },
+    "sensor": {
+      "internal_temperature": {
+        "name": "Eszköz belső hőmérséklete"
+      },
+      "session_remaining": {
+        "name": "Fűtési munkamenet hátralévő ideje"
+      },
+      "local_service": {
+        "name": "Brókerkapcsolat",
+        "state": {
+          "connected": "Csatlakoztatva",
+          "unreachable": "Nem érhető el"
+        }
+      }
+    }
+  },
+  "issues": {
+    "local_connection": {
+      "title": "Várakozás helyi fűtőtest-adatokra",
+      "description": "Nem érkezett friss helyi állapot ettől a fűtőtesttől: {mac}. Irányítsa az iot.luxeva.com.tr nevet a(z) {broker} bróker LAN-címére, engedélyezze a TCP 1883 portot és állítsa be az eszköz belépési adatait. Egyéni ACL-ben engedélyezze az inTopic/{mac}, outTopic/{mac} és OTA_Ready/{mac} témákat. DNS-módosítás után szükség lehet az eszköz újracsatlakozására. A jelzés friss állapot érkezésekor eltűnik."
+    },
+    "local_service_missing": {
+      "title": "Hiányzó helyi MQTT-szolgáltatás",
+      "description": "A(z) {mac} fűtőtesthez kiválasztott helyi szolgáltatást eltávolították vagy érvénytelen. A Beállítás menüben válasszon másik helyi MQTT-szolgáltatást. A fűtés nem érhető el, de a biztonsági leállítás továbbra is használható. Nincs automatikus felhős tartalékkapcsolat."
     }
   }
 }
