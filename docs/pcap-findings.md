@@ -33,8 +33,7 @@ The two complete handshakes establish:
 - Keepalive: 15 seconds.
 - Client IDs: `LuxevaClient-4e73` and `LuxevaClient-f067`. The suffix changes
   between these connections; its generation algorithm is unknown.
-- Both connections use the same username and password, `luxeva@us` /
-  `luxeva@pw`. A local broker has to accept this login, so it is documented in
+- Both connections use the same fixed username and password. A local broker has to accept this login, so it is documented in
   [Local MQTT setup](local-mqtt.md).
 - Broker returns successful CONNACK with session-present false.
 - Two exact subscriptions, both requested and granted at QoS 0:

@@ -36,12 +36,13 @@ A broker restart briefly disconnects all of its clients; the setup form says so
 before you opt in.
 This action is not repeated on every heater setup or HA restart.
 
-The observed firmware uses `luxeva@us` / `luxeva@pw`. Two captured connections from
-one heater used that pair; its universality across models is not established.
+The observed firmware logs in with a fixed username and password. Two captured
+connections from one heater used the same pair; its universality across models is not established.
 Mosquitto's local `logins` feature provisions it without creating a HA UI account.
 Home Assistant connects with the same login, so there are no credentials to enter;
 the broker must accept this login in any case for the heater to connect. On other
-brokers, add this login yourself. If you use per-user ACLs, the login also needs
+brokers, add this login yourself; the values are `DEVICE_USERNAME` and
+`DEVICE_PASSWORD` in `const.py`. If you use per-user ACLs, the login also needs
 to publish to `inTopic/<MAC>` and subscribe to `outTopic/<MAC>` for HA.
 
 Without Supervisor, leave automatic preparation unchecked and supply an existing

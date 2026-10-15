@@ -14,7 +14,7 @@ Other models and firmware versions are untested.
 | Protocol | MQTT 3.1.1, clean session, no Last Will |
 | Device keepalive | 15 seconds |
 | Device client ID | `LuxevaClient-xxxx`; the suffix changes between connections |
-| Device login | Username `luxeva@us`, password `luxeva@pw`, sent in plain text |
+| Device login | A fixed username and password, sent in plain text |
 | QoS / retain | QoS 0, not retained, in both directions |
 
 The device resolves the broker hostname through DNS, which is what makes local
