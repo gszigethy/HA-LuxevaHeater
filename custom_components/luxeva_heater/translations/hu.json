@@ -13,7 +13,8 @@
         "title": "Fűtőtest hozzáadása",
         "description": "Adja meg a fűtőtesten található MAC-címet. Minden fűtőtestet külön adjon hozzá.",
         "data": {
-          "mac": "Eszköz MAC-címe"
+          "mac": "Eszköz MAC-címe",
+          "name": "Név (például Terasz vagy Pergola)"
         }
       },
       "disclaimer": {

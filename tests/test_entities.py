@@ -17,6 +17,7 @@ class FakeCoordinator:
 
     def __init__(self) -> None:
         self.client_id = "00AA11BB22CC"
+        self.device_name = "Luxeva Heater 00AA11BB22CC"
         self.last_level = 3
         self.data = {
             "available": True,

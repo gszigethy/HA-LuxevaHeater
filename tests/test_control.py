@@ -396,6 +396,7 @@ def test_managed_entities_share_policy_and_keep_original_unique_ids(monkeypatch)
 
     r = Rig(monkeypatch, power=True)
     r.coordinator.client_id = "00AA11BB22CC"
+    r.coordinator.device_name = "Luxeva Heater 00AA11BB22CC"
     r.coordinator.control = r.control
     climate = LuxevaClimate(r.coordinator)
     timer = LuxevaTimer(r.coordinator)

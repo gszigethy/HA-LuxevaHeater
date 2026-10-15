@@ -54,6 +54,7 @@ class LuxevaCoordinator:
         self.hass = hass
         self.mac = mac.upper()
         self.client_id = mac.replace(":", "").upper()
+        self.device_name = f"Luxeva Heater {self.client_id}"
         self.broker = broker
         self.port = port
 

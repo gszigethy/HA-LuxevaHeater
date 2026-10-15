@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
@@ -203,6 +204,7 @@ class LuxevaConfigFlow(BrokerSetupMixin, config_entries.ConfigFlow, domain=DOMAI
 
     def __init__(self) -> None:
         self._mac = ""
+        self._name = ""
         self._values: dict[str, Any] = {}
         self._broker_task = None
         self._broker_error = None
@@ -229,10 +231,15 @@ class LuxevaConfigFlow(BrokerSetupMixin, config_entries.ConfigFlow, domain=DOMAI
                 await self.async_set_unique_id(mac.replace(":", ""))
                 self._abort_if_unique_id_configured()
                 self._mac = mac
+                self._name = str(user_input.get(CONF_NAME, "")).strip()
                 return await self.async_step_disclaimer()
         return self.async_show_form(
             step_id="heater",
-            data_schema=vol.Schema({vol.Required(CONF_MAC): str}),
+            # The name seeds the device name, so entity IDs read climate.patio
+            # rather than carrying the MAC address.
+            data_schema=vol.Schema(
+                {vol.Required(CONF_MAC): str, vol.Optional(CONF_NAME): str}
+            ),
             errors=errors,
         )
 
@@ -255,9 +262,12 @@ class LuxevaConfigFlow(BrokerSetupMixin, config_entries.ConfigFlow, domain=DOMAI
         if user_input is not None:
             errors = _heater_errors(self.hass, user_input, self._mac)
             if not errors:
+                data = {CONF_MAC: self._mac, CONF_ENTRY_TYPE: ENTRY_HEATER}
+                if self._name:
+                    data[CONF_NAME] = self._name
                 return self.async_create_entry(
-                    title=f"Luxeva Heater {self._mac}",
-                    data={CONF_MAC: self._mac, CONF_ENTRY_TYPE: ENTRY_HEATER},
+                    title=self._name or f"Luxeva Heater {self._mac}",
+                    data=data,
                     options=DEFAULT_OPTIONS | user_input,
                 )
         return self.async_show_form(

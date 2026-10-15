@@ -11,6 +11,12 @@ from custom_components import luxeva_heater
 from custom_components.luxeva_heater.const import CONF_MAC
 
 
+@pytest.fixture(autouse=True)
+def device_registry():
+    with patch.object(luxeva_heater.dr, "async_get") as registry:
+        yield registry
+
+
 def make_hass() -> Mock:
     hass = Mock()
     hass.config_entries.async_forward_entry_setups = AsyncMock()
@@ -251,3 +257,41 @@ def test_removing_a_service_suspends_every_heater_despite_reload_failure():
     terrace.runtime_data.control.suspend.assert_called_once()
     reloaded = [c.args[0] for c in hass.config_entries.async_reload.await_args_list]
     assert reloaded == ["patio", "terrace"]
+
+
+@pytest.mark.parametrize(
+    ("data_name", "device_name"),
+    [("Patio", "Patio"), (None, "Luxeva Heater 00AA11BB22CC")],
+)
+def test_setup_names_the_device_before_entities_are_added(data_name, device_name):
+    hass = make_hass()
+    entry = make_entry()
+    if data_name:
+        entry.data = entry.data | {"name": data_name}
+    coordinator = Mock(
+        async_connect=AsyncMock(),
+        async_disconnect=AsyncMock(),
+        client_id="00AA11BB22CC",
+        device_name="Luxeva Heater 00AA11BB22CC",
+    )
+    registry = Mock()
+    order = []
+    registry.async_get_or_create.side_effect = lambda **kw: order.append("device")
+    hass.config_entries.async_forward_entry_setups.side_effect = lambda *a: (
+        order.append("platforms")
+    )
+    with (
+        patch.object(luxeva_heater, "LuxevaCoordinator", return_value=coordinator),
+        patch.object(
+            luxeva_heater,
+            "LuxevaControl",
+            return_value=Mock(async_start=AsyncMock(), async_close=AsyncMock()),
+        ),
+        patch.object(luxeva_heater.dr, "async_get", return_value=registry),
+    ):
+        assert asyncio.run(luxeva_heater.async_setup_entry(hass, entry))
+    kwargs = registry.async_get_or_create.call_args.kwargs
+    assert kwargs["name"] == device_name
+    assert kwargs["identifiers"] == {("luxeva_heater", "00AA11BB22CC")}
+    assert order == ["device", "platforms"]
+    assert coordinator.device_name == device_name

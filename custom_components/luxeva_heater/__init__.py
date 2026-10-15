@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.storage import Store
 
 from .const import (
@@ -102,6 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuxevaConfigEntry) -> bo
     coordinator.username = broker_options.get(CONF_USERNAME)
     coordinator.password = broker_options.get(CONF_PASSWORD)
     coordinator.connection = options[CONF_CONNECTION]
+    if entry.data.get(CONF_NAME):
+        coordinator.device_name = entry.data[CONF_NAME]
     coordinator.control = LuxevaControl(coordinator, entry)
     coordinator.issue_id = f"local_connection_{entry.entry_id}"
     entry.runtime_data = coordinator
@@ -121,6 +123,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuxevaConfigEntry) -> bo
         await coordinator.control.async_start()
         if not missing_service:
             await coordinator.async_connect()
+        # Create the named device first: entity IDs are derived from the device
+        # name when entities are first added, whichever platform loads first.
+        dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, coordinator.client_id)},
+            name=coordinator.device_name,
+            manufacturer="Luxeva",
+            model="WiFi Infrared Heater",
+        )
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception as exc:
         await coordinator.control.async_close()

@@ -13,7 +13,8 @@
         "title": "Add a heater",
         "description": "Enter the MAC address on the heater label. Repeat for each heater (terrace, patio, etc.).",
         "data": {
-          "mac": "Device MAC address"
+          "mac": "Device MAC address",
+          "name": "Name (for example Terrace or Patio)"
         }
       },
       "disclaimer": {

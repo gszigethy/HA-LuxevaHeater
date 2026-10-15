@@ -302,3 +302,31 @@ def test_endpoint_taken_during_broker_check_is_rejected(monkeypatch):
     result = asyncio.run(run())
     assert result["type"] == "form"
     assert result["errors"] == {"base": "broker_in_use"}
+
+
+def test_heater_name_becomes_title_and_device_name():
+    async def run(name):
+        flow = new_flow(flow_hass())
+        values = {"mac": "00aa11bb22cc"} | ({"name": name} if name else {})
+        await flow.async_step_heater(values)
+        await flow.async_step_disclaimer({"disclaimer_accepted": True})
+        return await flow.async_step_settings(
+            {
+                key: DEFAULT_OPTIONS[key]
+                for key in (
+                    "control_mode",
+                    "connection",
+                    "tolerance",
+                    "minimum_cycle_seconds",
+                    "sensor_timeout_minutes",
+                    "protect_external_starts",
+                )
+            }
+        )
+
+    named = asyncio.run(run("  Patio "))
+    assert named["title"] == "Patio"
+    assert named["data"]["name"] == "Patio"
+    unnamed = asyncio.run(run("   "))
+    assert unnamed["title"] == "Luxeva Heater 00:AA:11:BB:22:CC"
+    assert "name" not in unnamed["data"]

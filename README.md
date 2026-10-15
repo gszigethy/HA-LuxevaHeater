@@ -42,11 +42,14 @@ and its release notes do not themselves publish a release.
 
 1. Provision its Wi-Fi using the official Luxeva app.
 2. Open **Settings → Devices & services → Add integration → Luxeva Heater**.
-3. Choose **Heater**, enter its MAC address and accept the disclaimer.
+3. Choose **Heater**, enter its MAC address and optionally a name such as Terrace
+   or Patio, then accept the disclaimer.
 4. Choose the heating controller and cloud or local connection.
 5. Optionally select an external room temperature sensor and upstream power switch.
-6. Rename the device for its location, such as Terrace or Patio. Repeat for each heater.
+6. Repeat for each heater.
 
+The name becomes the device name, so entity IDs read `climate.patio` rather than
+carrying the MAC address; without a name the device is called `Luxeva Heater <MAC>`.
 The MAC can be entered with colons, hyphens or without separators. Native MQTT
 topics always use uppercase, colon-separated MAC addresses.
 

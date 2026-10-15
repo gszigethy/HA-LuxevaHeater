@@ -66,7 +66,7 @@ class LuxevaClimate(ClimateEntity):
         self._attr_unique_id = f"{coordinator.client_id}_climate"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.client_id)},
-            name=f"Luxeva Heater {coordinator.client_id}",
+            name=coordinator.device_name,
             manufacturer="Luxeva",
             model="WiFi Infrared Heater",
         )
