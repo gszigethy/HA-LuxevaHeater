@@ -11,6 +11,7 @@ Option-B safety: whenever the device turns on without an active timer
 to ensure the cloud-loss safety property holds regardless of how the heater
 was started.
 """
+
 from __future__ import annotations
 
 import logging
@@ -42,8 +43,9 @@ class LuxevaActuatorSwitch(SwitchEntity):
     Turning off publishes T0 + B0 (timer cancelled, heater off).
 
     The 1-hour timer creates a heartbeat: when it expires, the device turns
-    itself off and this switch reports OFF. Generic Thermostat re-calls turn_on
-    if the setpoint is not yet reached, restarting the timer. If the MQTT
+    itself off and this switch reports OFF. Generic Thermostat can re-call turn_on
+    on a subsequent sensor update or periodic evaluation, restarting the timer.
+    The off transition alone does not trigger demand evaluation. If the MQTT
     connection drops instead, the device shuts off within one hour on its own
     — without any action from HA.
 
@@ -59,6 +61,7 @@ class LuxevaActuatorSwitch(SwitchEntity):
 
     def __init__(self, coordinator: LuxevaCoordinator) -> None:
         self._coordinator = coordinator
+        self._control = getattr(coordinator, "control", None)
         self._attr_unique_id = f"{coordinator.client_id}_actuator"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.client_id)},
@@ -75,6 +78,9 @@ class LuxevaActuatorSwitch(SwitchEntity):
 
     @callback
     def _handle_update(self) -> None:
+        if self._control and self._control.managed:
+            self.async_write_ha_state()
+            return
         prg = self._coordinator.data.get("prg", 0)
         tmr: str = self._coordinator.data.get("tmr", "00:00")
         available = self._coordinator.data.get("available", False)
@@ -90,7 +96,10 @@ class LuxevaActuatorSwitch(SwitchEntity):
             # that races ahead of it only re-sends the same 1-hour timer; no
             # "own turn-on" flag is kept because a stale flag would suppress
             # the safety timer for a later external turn-on.
-            if prg > 0 and self._prev_prg == 0 and tmr == "00:00":
+            protect = (
+                not self._control or self._control.options["protect_external_starts"]
+            )
+            if protect and prg > 0 and self._prev_prg == 0 and tmr == "00:00":
                 _LOGGER.debug(
                     "Luxeva actuator: turn-on without active timer — arming T1"
                 )
@@ -108,6 +117,9 @@ class LuxevaActuatorSwitch(SwitchEntity):
         return self._coordinator.data.get("prg", 0) > 0
 
     async def async_turn_on(self, **kwargs) -> None:
+        if self._control and self._control.managed:
+            self._control.turn_on("actuator")
+            return
         _LOGGER.debug(
             "Luxeva actuator: turning on at level %d with 1-hour timer",
             self._coordinator.last_level,
@@ -116,6 +128,9 @@ class LuxevaActuatorSwitch(SwitchEntity):
         self._coordinator.publish("T1")
 
     async def async_turn_off(self, **kwargs) -> None:
+        if self._control and self._control.managed:
+            self._control.turn_off("actuator")
+            return
         _LOGGER.debug("Luxeva actuator: turning off")
         self._coordinator.publish("T0")
         self._coordinator.publish("B0")

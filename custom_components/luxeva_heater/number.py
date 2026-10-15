@@ -1,4 +1,5 @@
 """Number entity for the Luxeva Heater timer."""
+
 from __future__ import annotations
 
 import logging
@@ -38,7 +39,7 @@ class LuxevaTimer(NumberEntity):
     _attr_has_entity_name = True
     _attr_name = "Timer"
     _attr_device_class = NumberDeviceClass.DURATION
-    _attr_native_min_value = 0      # 0 sends T0+B0: cancel timer and turn heater off
+    _attr_native_min_value = 0  # 0 sends T0+B0: cancel timer and turn heater off
     _attr_native_max_value = TIMER_MAX_HOURS
     _attr_native_step = 1
     _attr_native_unit_of_measurement = UnitOfTime.HOURS
@@ -48,6 +49,7 @@ class LuxevaTimer(NumberEntity):
 
     def __init__(self, coordinator: LuxevaCoordinator) -> None:
         self._coordinator = coordinator
+        self._control = getattr(coordinator, "control", None)
         self._attr_unique_id = f"{coordinator.client_id}_timer"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.client_id)},
@@ -72,18 +74,30 @@ class LuxevaTimer(NumberEntity):
     @property
     def native_value(self) -> float:
         """Return remaining hours (ceiling of HH:MM countdown); 0 when no timer is set."""
+        if self._control and self._control.managed:
+            return min(math.ceil(self._control.session_minutes / 60), TIMER_MAX_HOURS)
         tmr: str = self._coordinator.data.get("tmr", "00:00")
         try:
             h, m = (int(x) for x in tmr.split(":"))
             total_minutes = h * 60 + m
-            return min(math.ceil(total_minutes / 60), TIMER_MAX_HOURS) if total_minutes else 0
+            return (
+                min(math.ceil(total_minutes / 60), TIMER_MAX_HOURS)
+                if total_minutes
+                else 0
+            )
         except (ValueError, AttributeError):
             return 0
 
     async def async_set_native_value(self, value: float) -> None:
         hours = int(value)
+        if self._control and self._control.managed:
+            self._control.set_session(hours)
+            return
         if hours > 0 and self._coordinator.data.get("prg", 0) == 0:
-            _LOGGER.debug("Heater off — turning on at level %d before setting timer", self._coordinator.last_level)
+            _LOGGER.debug(
+                "Heater off — turning on at level %d before setting timer",
+                self._coordinator.last_level,
+            )
             self._coordinator.publish(f"B{self._coordinator.last_level}")
         _LOGGER.debug("Setting timer: %d hour(s)", hours)
         self._coordinator.publish(f"T{hours}")
