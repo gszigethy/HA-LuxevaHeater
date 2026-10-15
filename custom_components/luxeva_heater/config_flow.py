@@ -43,6 +43,10 @@ from .const import (
 )
 from .local import async_prepare_mosquitto, async_probe_broker
 
+# About 30 s for a restarted broker to accept connections.
+BROKER_READY_ATTEMPTS = 15
+BROKER_READY_INTERVAL = 2
+
 _MAC_RE = re.compile(r"^[0-9A-F]{2}(:[0-9A-F]{2}){5}$")
 
 
@@ -167,9 +171,17 @@ class BrokerSetupMixin:
 
     async def _prepare(self) -> None:
         try:
-            if self._values.get(CONF_PREPARE_BROKER):
+            prepared = bool(self._values.get(CONF_PREPARE_BROKER))
+            if prepared:
                 await async_prepare_mosquitto(self.hass)
-            if not await async_probe_broker(self.hass, self._values):
+            # Preparation may have just (re)started Mosquitto, which takes a few
+            # seconds to accept connections; retry instead of failing at once.
+            for attempt in range(BROKER_READY_ATTEMPTS if prepared else 1):
+                if attempt:
+                    await asyncio.sleep(BROKER_READY_INTERVAL)
+                if await async_probe_broker(self.hass, self._values):
+                    break
+            else:
                 self._broker_error = "cannot_connect"
         except Exception:
             # Never expose exception text that could contain broker credentials.

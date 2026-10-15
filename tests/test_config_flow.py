@@ -338,3 +338,38 @@ def test_broker_form_asks_for_no_credentials():
     # The heater's login is fixed in firmware; typing it is only a failure point.
     fields = {str(key) for key in module._broker_schema().schema}
     assert fields == {"broker", "port", "prepare_mosquitto"}
+
+
+def test_broker_check_waits_for_a_restarted_mosquitto(monkeypatch):
+    # Preparation may restart Mosquitto; the first checks hit a broker that is
+    # still starting and must not fail the setup.
+    probe = AsyncMock(side_effect=[False, False, True])
+    monkeypatch.setattr(module, "async_probe_broker", probe)
+    monkeypatch.setattr(module, "async_prepare_mosquitto", AsyncMock())
+    monkeypatch.setattr(module.asyncio, "sleep", AsyncMock())
+
+    async def run():
+        flow = new_flow(flow_hass())
+        await flow.async_step_local_service(
+            {"broker": "core-mosquitto", "port": 1883, "prepare_mosquitto": True}
+        )
+        await flow._broker_task
+        return await flow.async_step_local_service()
+
+    assert asyncio.run(run())["type"] == "create_entry"
+    assert probe.await_count == 3
+
+
+def test_unprepared_broker_is_checked_once(monkeypatch):
+    probe = AsyncMock(return_value=False)
+    monkeypatch.setattr(module, "async_probe_broker", probe)
+    monkeypatch.setattr(module.asyncio, "sleep", AsyncMock())
+
+    async def run():
+        flow = new_flow(flow_hass())
+        await flow.async_step_local_service({"broker": "broker", "port": 1883})
+        await flow._broker_task
+        return await flow.async_step_local_service()
+
+    assert asyncio.run(run())["errors"] == {"base": "cannot_connect"}
+    assert probe.await_count == 1

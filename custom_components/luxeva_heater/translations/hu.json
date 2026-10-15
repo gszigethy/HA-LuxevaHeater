@@ -60,7 +60,7 @@
       "disclaimer_not_accepted": "A folytatáshoz fogadja el a nyilatkozatot.",
       "local_service_required": "Először adjon hozzá helyi MQTT-szolgáltatást, majd válassza ki itt.",
       "invalid_power_switch": "Külön tápellátási kapcsolót válasszon, ne Luxeva aktuátort.",
-      "cannot_connect": "Nem sikerült csatlakozni a brókerhez. Ellenőrizze a címet, portot és belépési adatokat.",
+      "cannot_connect": "Nem sikerült bejelentkezni a brókerbe. Ellenőrizze a címét és portját, hogy fut-e, és hogy elfogadja-e a fűtőtest belépési adatait (az alábbi Mosquitto opció hozzáadja).",
       "broker_setup_failed": "Nem sikerült előkészíteni a Mosquitto brókert. Ellenőrizze a Supervisor-t, a naplókat és a meglévő felhasználókat, vagy állítsa be kézzel.",
       "reset_safety_first": "A tápellátási kapcsoló módosítása vagy eltávolítása előtt oldja fel a biztonsági leállítást.",
       "broker_in_use": "Ehhez a bróker címhez és porthoz már tartozik helyi MQTT szolgáltatás."
@@ -110,7 +110,7 @@
       "disclaimer_not_accepted": "A folytatáshoz fogadja el a nyilatkozatot.",
       "local_service_required": "Először adjon hozzá helyi MQTT-szolgáltatást, majd válassza ki itt.",
       "invalid_power_switch": "Külön tápellátási kapcsolót válasszon, ne Luxeva aktuátort.",
-      "cannot_connect": "Nem sikerült csatlakozni a brókerhez. Ellenőrizze a címet, portot és belépési adatokat.",
+      "cannot_connect": "Nem sikerült bejelentkezni a brókerbe. Ellenőrizze a címét és portját, hogy fut-e, és hogy elfogadja-e a fűtőtest belépési adatait (az alábbi Mosquitto opció hozzáadja).",
       "broker_setup_failed": "Nem sikerült előkészíteni a Mosquitto brókert. Ellenőrizze a Supervisor-t, a naplókat és a meglévő felhasználókat, vagy állítsa be kézzel.",
       "reset_safety_first": "A tápellátási kapcsoló módosítása vagy eltávolítása előtt oldja fel a biztonsági leállítást.",
       "broker_in_use": "Ehhez a bróker címhez és porthoz már tartozik helyi MQTT szolgáltatás."

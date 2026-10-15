@@ -60,7 +60,7 @@
       "disclaimer_not_accepted": "You must read and accept the disclaimer to continue.",
       "local_service_required": "Add a Local MQTT service entry first, then choose it here.",
       "invalid_power_switch": "Choose a physical upstream power switch, not a Luxeva actuator.",
-      "cannot_connect": "Could not authenticate to the broker. Check its address, port, credentials and whether it is running.",
+      "cannot_connect": "Could not log in to the broker. Check its address and port, that it is running, and that it accepts the heater login (the Mosquitto option below adds it).",
       "broker_setup_failed": "Could not prepare Mosquitto. Check Supervisor availability, broker logs and existing login conflicts; or configure the broker manually.",
       "reset_safety_first": "Reset safety shutdown before changing or removing the upstream power switch.",
       "broker_in_use": "A Local MQTT service already uses this broker address and port."
@@ -110,7 +110,7 @@
       "disclaimer_not_accepted": "You must read and accept the disclaimer to continue.",
       "local_service_required": "Add a Local MQTT service entry first, then choose it here.",
       "invalid_power_switch": "Choose a physical upstream power switch, not a Luxeva actuator.",
-      "cannot_connect": "Could not authenticate to the broker. Check its address, port, credentials and whether it is running.",
+      "cannot_connect": "Could not log in to the broker. Check its address and port, that it is running, and that it accepts the heater login (the Mosquitto option below adds it).",
       "broker_setup_failed": "Could not prepare Mosquitto. Check Supervisor availability, broker logs and existing login conflicts; or configure the broker manually.",
       "reset_safety_first": "Reset safety shutdown before changing or removing the upstream power switch.",
       "broker_in_use": "A Local MQTT service already uses this broker address and port."
