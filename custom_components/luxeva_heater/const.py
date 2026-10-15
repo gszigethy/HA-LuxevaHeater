@@ -58,7 +58,6 @@ ENTRY_HEATER = "heater"
 ENTRY_LOCAL_SERVICE = "local_service"
 CONF_LOCAL_SERVICE = "local_service"
 # Observed device firmware login. Not claimed to be universal to every model.
+# It is fixed in the firmware and provisioned on local brokers; not a secret.
 DEVICE_USERNAME = "luxeva@us"
-DEVICE_PASSWORD = (
-    "luxeva@pw"  # NOSONAR - fixed firmware login, provisioned locally; not a secret
-)
+DEVICE_PASSWORD = "luxeva@pw"  # NOSONAR
