@@ -1,9 +1,12 @@
 # Device network capture findings — 2026-10-15
 
-Source: user-provided `~/luxeva.pcap`, 474,938 bytes, SHA-256
-`1e34befe82a34fb08884d97f3e28347710353079f574b3b005081c29b4ba0873`.
-4,764 packets spanning 09:55:18–10:55:13 UTC (11:55:18–12:55:13 Budapest).
-Analysis uses packet contents, not the HA integration implementation.
+Source: a one-hour packet capture of one SMART-FR BLACK heater's network traffic
+(474,938 bytes, SHA-256
+`1e34befe82a34fb08884d97f3e28347710353079f574b3b005081c29b4ba0873`), 4,764 packets
+from 09:55:18 to 10:55:13 UTC. The capture itself is not published because it
+contains real device identifiers. Analysis uses packet contents only, not the
+integration's implementation. The resulting protocol summary is in
+[MQTT protocol](mqtt-protocol.md).
 
 ## Observed network behavior
 
@@ -30,8 +33,9 @@ The two complete handshakes establish:
 - Keepalive: 15 seconds.
 - Client IDs: `LuxevaClient-4e73` and `LuxevaClient-f067`. The suffix changes
   between these connections; its generation algorithm is unknown.
-- Both connections use the same captured username and password. Values remain
-  in the private analysis file rather than this repository document.
+- Both connections use the same username and password, `luxeva@us` /
+  `luxeva@pw`. A local broker has to accept this login, so it is documented in
+  [Local MQTT setup](local-mqtt.md).
 - Broker returns successful CONNACK with session-present false.
 - Two exact subscriptions, both requested and granted at QoS 0:
   `inTopic/<MAC>` and **`OTA_Ready/<MAC>`**.
@@ -67,11 +71,8 @@ Do not infer an OTA procedure from the subscription alone.
 
 Observed steady-state control needs a plain MQTT broker supporting the
 captured device login, subscriptions, status topic, and command strings.
-DNS-based redirection is a plausible next experiment because the device
-performs hostname lookups. Neither DNS redirection nor a replacement broker
-has been tested; cached addresses, reconnection behavior, and dependencies
-outside this capture remain to be verified. No local network configuration
-was changed during analysis.
-
-Private decoded flow evidence: `.local/pcap/analysis.json` (contains credentials
-and real device identifiers). Original capture remains unchanged.
+DNS-based redirection is feasible because the device performs hostname lookups;
+the integration's local mode relies on it. At the time of writing, neither DNS
+redirection nor a replacement broker has been tested with a real heater; cached
+addresses, reconnection behavior and dependencies outside this capture remain to
+be verified.

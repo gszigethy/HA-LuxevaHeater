@@ -129,6 +129,7 @@ accompanying MQTT command in the capture. Remote buttons send IR actions;
 they are not demonstrated to publish the app's command payloads. Further IR
 to status correlation is separate from the captured IR protocol specification.
 
-Private raw evidence and user annotations are stored under
-`.local/mqtt/2026-10-15/`. No cloudless broker replacement, outbound replay,
-or device network redirection has been tested in this session.
+Raw captures contain the real device MAC and are kept privately by the
+maintainer. No cloudless broker replacement, outbound replay or device network
+redirection was tested in this session. The resulting protocol summary is in
+[MQTT protocol](mqtt-protocol.md).

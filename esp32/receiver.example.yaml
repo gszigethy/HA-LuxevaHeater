@@ -1,6 +1,7 @@
-# Capture-only firmware; GPIO32 RX and GPIO26 TX supplied by the user.
+# Receive-only IR capture firmware (GPIO32 RX). The node was named
+# webasto-ir-capture during the capture session; the name has no other meaning.
 esphome:
-  name: webasto-ir-capture
+  name: luxeva-ir-capture
   min_version: 2026.9.1
 
 esp32:

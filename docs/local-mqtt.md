@@ -32,7 +32,8 @@ when the configuration changed. The flow shows progress and verifies MQTT CONNAC
 Existing options and logins are preserved. A matching existing login is reused
 without restarting an already running broker. A conflicting password is rejected
 rather than overwritten. Preparation is serialized across Luxeva setup flows.
-A restart briefly affects all broker clients, as explained before opting in.
+A broker restart briefly disconnects all of its clients; the setup form says so
+before you opt in.
 This action is not repeated on every heater setup or HA restart.
 
 The observed firmware uses `luxeva@us` / `luxeva@pw`. Two captured connections from
@@ -43,8 +44,10 @@ Custom brokers or firmware may need manual device-login provisioning.
 
 Without Supervisor, leave automatic preparation unchecked and supply an existing
 broker. The integration does not replace HA's configured MQTT integration or
-change its broker. Changing a shared service reloads referencing heaters and ends
-existing sessions. Configure another service instead if only one heater should move.
+change its broker. Each broker address and port can belong to only one service
+entry. Changing a shared service stops its heaters, refuses new starts until they
+reconnect, and ends their sessions. Configure another service instead if only one
+heater should move.
 
 ## Network steps the user must perform
 
@@ -82,7 +85,8 @@ The PCAP establishes the device-facing MQTT contract, not the official app's
 account, discovery or provisioning backend. Full offline operation of the official
 app is not claimed. Wi-Fi provisioning remains through the official app.
 
-Before relying on local heating, verify fresh status for every MAC, command effects,
-standby-to-heating behavior, repeated `T1` resets, loss-of-HA timeout and recovery.
-The integration development does not itself redirect DNS, install a live broker,
-change HA users, publish commands to the physical heater or cut its power.
+Local operation has not yet been verified with a real heater. Before relying on
+it, check for every heater: fresh status arrives, commands take effect, heating
+starts from standby, `T1` renewals are confirmed, and the heater stops within an
+hour when HA is stopped. The integration never changes your DNS, HA users or
+power switches by itself; Mosquitto is installed only when you choose that option.

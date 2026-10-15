@@ -3,8 +3,8 @@
 ## 2.0.0-beta.1 — major-version preview
 
 This preview adds external room-temperature regulation and local MQTT setup while
-preserving existing 1.x installations in Compatibility mode. It is prepared in the
-repository; publication and live deployment are separate steps.
+preserving existing 1.x installations in Compatibility mode. Background on the
+behavior is in the [design document](docs/design.md).
 
 ### New thermostat and control ownership
 
@@ -46,7 +46,9 @@ repository; publication and live deployment are separate steps.
 
 ### Shared local MQTT service
 
-- The Add integration menu now offers Heater or Local MQTT service.
+- The Add integration menu now offers Heater or Local MQTT service. A heater can
+  be given a name such as Terrace or Patio during setup, which also names its
+  entities.
 - Each heater remains a separate MAC-based config entry/device with independent
   settings, sessions and safety state. Multiple heaters can reuse one service.
   Each broker address and port can belong to only one service entry. Changing a
@@ -82,7 +84,8 @@ repository; publication and live deployment are separate steps.
 
 ### Protocol documentation
 
-- Added the saved manufacturer manual, full IR specification, machine-readable
+- Added the saved manufacturer manual, an [MQTT protocol](docs/mqtt-protocol.md)
+  description, the full [IR specification](docs/ir-protocol.md), a machine-readable
   button map, decoder, capture evidence, MQTT correlations and PCAP findings.
 - IR encoding matches the protocol named Xiaomi in IrpTransmogrifier, verified
   against 298 received frames. No generated IR transmission has been heater-tested.

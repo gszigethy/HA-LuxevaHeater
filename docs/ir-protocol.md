@@ -271,8 +271,10 @@ was captured. Do not invent direct IR codes for "set 22 C", "level 4", or
 "off" from this table. Any multi-button sequence to achieve an absolute state
 depends on the heater's screen and current value and needs live verification.
 
-The integration in this repository uses cloud MQTT, a separate transport.
-Its `B0`-`B6` and `T0`-`T9` messages are not IR field values. Matching the
+The integration in this repository uses MQTT, through the Luxeva cloud or a
+local broker, which is a separate transport described in the
+[MQTT protocol](mqtt-protocol.md). Its `B0`-`B6` and `T0`-`T9` messages are not
+IR field values. Matching the
 remote's button codes does not establish a direct numerical mapping to MQTT
 commands or guarantee that IR control reconstructs the heater's full state.
 

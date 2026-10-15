@@ -1,189 +1,150 @@
-# Luxeva Heater
+# Luxeva Heater for Home Assistant
 
-Control Luxeva Wi-Fi infrared heaters from Home Assistant using the Luxeva cloud
-or a local MQTT broker. Each heater has its own device and climate entity;
-one local MQTT service can serve multiple heaters.
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
+[![Home Assistant 2026.9.4+](https://img.shields.io/badge/Home%20Assistant-2026.9.4%2B-blue)](https://www.home-assistant.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**2.0.0-beta.1 is a major-version preview.** Existing installations keep their
-1.x behavior until explicitly reconfigured. See the [release notes](CHANGELOG.md)
-and [migration guide](docs/migration.md) before changing control modes.
+Control and monitor **Luxeva Wi-Fi infrared heaters** (such as the SMART-FR
+series) from Home Assistant, through the Luxeva cloud or your own local MQTT
+broker.
+
+The official app only sets a heating level, timer and the heater's built-in
+thermostat, and that thermostat measures the heater's own temperature rather than
+the room's. This integration turns the heater into a proper room thermostat
+using any HA temperature sensor, and always keeps a safety countdown running on
+the device: if Home Assistant or the network fails, the heater switches itself
+off within an hour.
+
+> [!WARNING]
+> **Remotely operating a heater can cause fire, injury or property damage.**
+> Use it only with heaters suitable for unattended operation, keep combustible
+> materials away, and follow the manufacturer's instructions. You accept these
+> risks during setup. Version 2.0 is a beta that has not yet been fully tested on
+> hardware; see the [release notes](CHANGELOG.md).
+
+> [!NOTE]
+> This is an independent community project. It is **not affiliated with, endorsed
+> by or supported by Luxeva** or its manufacturer. "Luxeva" is used only to identify
+> compatible devices. Use of the Luxeva cloud remains subject to Luxeva's terms.
 
 ## Features
 
-- Room thermostat using an external HA temperature sensor, with heat/off,
-  target temperature and P1–P6 heating intensity.
-- Manual heat/off and level control when no external sensor is selected.
-- A renewable one-hour device countdown: loss of HA or MQTT stops renewal,
-  leaving the device to stop when its last successfully applied timer expires.
-- User sessions up to nine hours, persisted as an absolute deadline and broken
-  into one-hour device safety intervals. Thermostat cycling does not restart
-  the user session.
-- An actuator switch for advanced users with a separate Generic Thermostat helper.
-- Optional manual safety shutdown through a separate HA-managed power plug or relay,
-  with a persistent latch that never automatically restores power or heating.
-- Separate shared local MQTT service entries, with optional Mosquitto preparation
-  and device-login provisioning on installations with Supervisor.
-- Live reported device state, internal temperature, device countdown, and separate
-  user-session time remaining.
+- **Room thermostat**: heat/off, target temperature and heating level P1–P6 in one
+  climate entity, regulated by an external sensor of your choice.
+- **Safety countdown**: a one-hour device timer renewed while heating, so a lost
+  connection always ends in shutdown.
+- **Timer sessions** of up to nine hours that survive HA restarts.
+- **Generic Thermostat support** through an actuator switch, for existing setups.
+- **Cloudless operation** with a local MQTT broker shared by several heaters.
+- **Safety shutdown** that cuts power through a separate smart plug or relay.
+- Live device state, also reflecting changes made with the remote or the app.
 
-## Install
+## Requirements
 
-Requires **Home Assistant 2026.9.4 or newer** for this preview.
+- Home Assistant 2026.9.4 or newer.
+- A heater already connected to Wi-Fi with the official Luxeva app.
+- The heater's MAC address, printed on its label.
 
-In HACS, add `https://github.com/gszigethy/HA-LuxevaHeater` as a custom Integration
-repository. Install the integration and restart HA. Alternatively, copy
-`custom_components/luxeva_heater` into your HA configuration's
-`custom_components` directory and restart.
+## Installation
 
-For a published beta, enable prerelease versions in HACS. This source checkout
-and its release notes do not themselves publish a release.
+**HACS (recommended)**
 
-## Add a heater
+1. In HACS, search for **Luxeva Heater**. If it is not listed, add
+   `https://github.com/gszigethy/HA-LuxevaHeater` under **⋮ → Custom repositories**
+   with type **Integration**.
+2. Download it. Beta versions appear when **Show beta versions** is enabled for the
+   repository.
+3. Restart Home Assistant.
 
-1. Provision its Wi-Fi using the official Luxeva app.
-2. Open **Settings → Devices & services → Add integration → Luxeva Heater**.
-3. Choose **Heater**, enter its MAC address and optionally a name such as Terrace
-   or Patio, then accept the disclaimer.
-4. Choose the heating controller and cloud or local connection.
-5. Optionally select an external room temperature sensor and upstream power switch.
-6. Repeat for each heater.
+**Manual**: copy `custom_components/luxeva_heater` into your configuration's
+`custom_components` folder and restart Home Assistant.
 
-The name becomes the device name, so entity IDs read `climate.patio` rather than
-carrying the MAC address; without a name the device is called `Luxeva Heater <MAC>`.
-The MAC can be entered with colons, hyphens or without separators. Native MQTT
-topics always use uppercase, colon-separated MAC addresses.
+## Configuration
 
-### Choose one heating controller
+Go to **Settings → Devices & services → Add integration → Luxeva Heater**, choose
+**Heater**, and enter:
 
-| Controller | Use it when | Behavior |
-| --- | --- | --- |
-| **Luxeva climate** | You want the integration to regulate room temperature | Select an external sensor; choose target temperature and Level 1–6. Without a sensor, it provides manual level control. It renews `T1` every ten minutes while heating is needed. |
-| **Actuator** | You already use an external thermostat helper | Connect the actuator switch to your Generic Thermostat. It arms `T1` on each turn-on and lets that interval expire; it does not periodically renew it. |
-| **Compatibility** | You are keeping an existing 1.x installation | Preserves the old climate, timer and actuator behavior. Available to existing entries through Configure. |
+1. **MAC address**, with or without separators, and an optional **name** such as
+   Terrace or Patio. The name becomes the device name, so entity IDs read
+   `climate.patio`.
+2. Accept the safety disclaimer.
+3. Heater settings:
 
-The room sensor is selected from your HA temperature sensors. Celsius,
-Fahrenheit and Kelvin inputs are converted to Celsius for regulation. Default
-hysteresis is ±0.3°C and the minimum interval between normal heating changes is
-five minutes; both are configurable. Temperature targets are 5–35°C.
+| Setting | Description |
+| --- | --- |
+| Heating controller | **Luxeva climate** (recommended) regulates by itself. **Actuator** is for an existing Generic Thermostat helper. |
+| Connection | Luxeva cloud, or a Local MQTT service you added first. |
+| External room temperature sensor | Enables temperature regulation. Leave empty for manual level control. |
+| Upstream power switch | Optional plug or relay that powers the heater; enables safety shutdown. |
+| Temperature tolerance | Hysteresis around the target, default ±0.3 °C. |
+| Minimum time between heating changes | Default 300 seconds. |
+| Maximum sensor reading age | Stop heating if the sensor stops reporting; 0 disables the check. |
+| Safety timer for remote/app starts | Give heating started outside HA a one-hour countdown. |
 
-The selected P level is maintained during thermostat cycling. With an external
-sensor, `heat` means regulation is enabled even while the device is idle.
-The raw `Prg` value reports a selected program, not measured element output;
-heating action is an estimate, especially if the device thermostat is enabled.
+Add each heater separately. Change these settings later with **Configure**; saving
+ends the current heating session and leaves the heater off.
 
-**Use one controller at a time.** Switching to Luxeva climate requires disabling
-any Generic Thermostat helper controlling that actuator. The integration does
-not delete or rewrite helpers or automations. In managed modes, attempts to start
-through the unselected controller produce an explanatory error. Stop remains
-available through either interface. Compatibility mode preserves the old overlap.
+Use only one controller per heater: before switching to Luxeva climate, turn off
+any Generic Thermostat helper that controls it.
 
-### Temperature and loss of data
+### Local MQTT (cloudless)
 
-The built-in `Tmp` reading can be substantially hotter than the room. It is
-exposed as **Internal device temperature**, not used for external regulation.
-The built-in thermostat is read-only; managed heating sends `H0` so a previous
-internal setpoint does not compete with HA control.
+Add **Luxeva Heater → Local MQTT service** once, optionally letting it install and
+prepare the Mosquitto app, then select it in each heater's settings. You must
+redirect `iot.luxeva.com.tr` to your broker in your own DNS. See
+[Local MQTT setup](docs/local-mqtt.md).
 
-Missing, unavailable, nonnumeric, nonfinite or restored room readings prevent
-heating. A running heater receives a shutdown request; renewals stop. When a
-valid sensor returns, an enabled Luxeva thermostat can evaluate demand again.
-An optional maximum sensor-data age uses the last reported time, rather than
-requiring the temperature value to change. The default 0 disables age checking.
-Choose an age appropriate for the sensor's reporting schedule.
+## Entities
 
-## Timer and safety behavior
+| Entity | Description |
+| --- | --- |
+| Climate | Heat/off, level P1–P6 (preset) and, with a sensor, target temperature |
+| Timer | User session of 0–9 hours; 0 cancels the limit |
+| Timer Remaining | Device countdown, in minutes |
+| User session remaining | Time left until the session deadline, in minutes |
+| Thermostat | Device thermostat setpoint, or Disabled |
+| Internal device temperature | The heater's own sensor (diagnostic, reads hotter than the room) |
+| Actuator | On/off switch for a Generic Thermostat helper |
+| Safety shutdown, Reset safety shutdown, Safety shutdown active | Only with an upstream power switch |
 
-In managed modes, **Timer** controls a user session, while **Timer Remaining**
-continues to show the physical device countdown for automation compatibility.
-**User session remaining** shows the independent HA deadline in minutes.
+How these behave in detail (regulation, renewals, sessions, restarts, power cut)
+is described in the [design document](docs/design.md).
 
-- Set Timer to 1–9 hours to establish a deadline; this does not itself start an
-  off heater. Turn on the chosen controller to begin heating.
-- Set Timer to 0 to cancel the session limit while keeping active heating protected.
-- Session time includes idle periods. Reaching room temperature does not reset it.
-- At session expiry, Luxeva climate regulation is disabled and shutdown is requested.
-  In actuator mode, further automatic turn-on requests are rejected until the user
-  clears or sets a new session through Timer.
-- MQTT timer changes from the app, and detectable timer changes from the IR remote,
-  become user sessions. Long native timers are replaced with `T1` after observation.
-- Timer renewals require confirmation in fresh device status. An unconfirmed renewal
-  stops that heating run and requires a new explicit start in HA. It does not block
-  later starts from the remote or app.
-- With external-start protection enabled, heating started by the remote or app gets
-  one one-hour device interval. HA does not take over or renew it, including after
-  a user session has ended.
-- Sessions, selected level, target, requested climate mode and the shutdown latch are
-  stored per heater. HA restart never restarts a session's full duration. Regulation
-  resumes only after valid room input and fresh non-retained heater status arrive.
-- Explicit configuration changes end the old session and leave heating off.
+## Upgrading from 1.x
 
-The firmware accepts **whole-hour timers only** in the observed protocol. HA
-sends `T1` even for the final partial hour and requests shutdown at the exact
-session deadline while running (evaluated every five seconds). If HA fails during that final interval, shutdown
-can occur after the requested deadline, bounded by the last applied one-hour
-countdown. No sub-hour firmware command has been established.
+Existing heaters keep working unchanged in **Compatibility** mode, with the same
+entity IDs. New features are opt-in through **Configure**. Do not remove and re-add
+your heaters. See the [migration guide](docs/migration.md).
 
-External changes made while HA is unavailable cannot be shortened by HA. IR-only
-resets that produce an indistinguishable remaining value cannot be identified
-reliably. Command-topic observation catches app timer commands, including repeated
-values, but MQTT delivery does not identify the original publisher.
+## Documentation
 
-### Optional power-cut safety shutdown
+| Document | Contents |
+| --- | --- |
+| [Release notes](CHANGELOG.md) | What changed in each version |
+| [Migration guide](docs/migration.md) | Moving from 1.x, behavior changes, rollback |
+| [Local MQTT setup](docs/local-mqtt.md) | Shared broker, Mosquitto preparation, DNS, troubleshooting |
+| [Design](docs/design.md) | Functional and technical design: control modes, safety timer, sessions, power cut |
+| [MQTT protocol](docs/mqtt-protocol.md) | Topics, status format, commands, connection details |
+| [Infrared protocol](docs/ir-protocol.md) | Complete remote control specification, timings, checksum, encoder and decoder |
+| [IR code map](docs/ir-codes.json) | Machine-readable button codes |
+| [MQTT capture](docs/mqtt-capture.md) | How the MQTT commands were captured and correlated |
+| [PCAP findings](docs/pcap-findings.md) | Device network behavior and connection details |
+| [IR research](docs/ir-research.md) | How the remote was captured and identified |
+| [IR captures](captures/smart-fr/2026-10-15/README.md) | Raw captured frames and decoding results |
+| [Manufacturer manual](docs/manuals/luxeva-pro-smart-smarty-instruction.pdf) | Original heater manual; the remote is on printed page 14 |
 
-Choose a separate HA `switch` entity supplying power to the heater. It must be
-rated for the heater's electrical load. Luxeva actuator switches are rejected.
+## Troubleshooting
 
-The device gains **Safety shutdown**, **Reset safety shutdown** and a
-**Safety shutdown active** indicator. Pressing Safety shutdown latches control off,
-ends the session and requests upstream power-off without waiting for heater MQTT.
-The indicator reports whether the upstream switch confirmed off, did not confirm,
-or the service call failed. A reported off state is not an independent electrical
-measurement.
+Enable debug logging and check **Settings → System → Logs**:
 
-Safety controls load even when MQTT is unreachable at HA startup.
-The latch survives HA restarts. Reset requires the upstream switch to report off;
-it only clears the latch. Restore power manually and explicitly start heating.
-No automatic power cut or power restoration is implemented. The button requires
-HA and the upstream switch to be reachable; the device countdown remains the
-fallback when HA is down.
+```yaml
+logger:
+  logs:
+    custom_components.luxeva_heater: debug
+```
 
-## Local MQTT setup
-
-See [Local MQTT setup](docs/local-mqtt.md) for the shared-service wizard, automatic
-Mosquitto preparation, DNS instructions, multiple heaters and troubleshooting.
-
-Cloud and local use the same control policy and native topics. Local mode never
-silently falls back to the cloud. No custom broker or Luxeva service app is needed.
-
-## Existing users and Generic Thermostat
-
-Existing config entries, MAC-based device identities and the five original entity
-unique IDs are preserved. Existing Generic Thermostat helpers remain external HA
-configuration. Compatibility mode keeps their actuator semantics and old timer-zero
-shutdown behavior. See [migration instructions](docs/migration.md).
-
-## Protocol reference and validation
-
-- [MQTT command correlation](docs/mqtt-capture.md)
-- [PCAP connection contract](docs/pcap-findings.md)
-- [Complete infrared protocol](docs/ir-protocol.md), including all nine remote buttons,
-  timings, checksum and repeats, verified against 298 captured frames
-- [Machine-readable IR code map](docs/ir-codes.json) and [offline decoder](scripts/decode_ir.py)
-- [Saved manufacturer manual](docs/manuals/luxeva-pro-smart-smarty-instruction.pdf)
-
-Captured MQTT is plain MQTT 3.1.1 on port 1883, QoS 0, non-retained. Device status
-normally arrives about every 1.9 seconds; the firmware requests a 15-second
-keepalive. The integration does not synthesize device status or copy the device
-client ID; its own HA connection has an independent keepalive. Device status
-silence for 30 seconds marks the heater unavailable. Renewals stop while status is
-silent; silence alone does not shut the heater down, and the last applied device
-countdown remains the fallback.
-
-Automated tests validate software policy and protocol parsing. MQTT power-on from
-standby, repeated timer renewal on physical hardware, DNS redirection and power-cut
-hardware operation still require acceptance testing before a stable release.
-The official app's restriction on starting heating is not proof of the firmware's
-MQTT behavior. The beta must not be presented as hardware-validated cloudless control.
+A heater becomes unavailable after 30 seconds without status messages. Check that it
+is powered and online, and for local MQTT, that DNS points it at your broker.
 
 ## Development
 
@@ -195,4 +156,19 @@ python3.14 -m venv .venv
 .venv/bin/mypy custom_components/luxeva_heater --ignore-missing-imports --follow-imports skip
 ```
 
-License: MIT.
+## Credits
+
+- [IrpTransmogrifier](https://github.com/bengtmartensson/IrpTransmogrifier) by
+  Bengt Mårtensson, whose protocol database identified the remote's encoding.
+- [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266), used for
+  comparison during IR analysis.
+- [Eclipse Paho](https://eclipse.dev/paho/) MQTT client,
+  [ESPHome](https://esphome.io) for the IR capture firmware,
+  [Home Assistant](https://www.home-assistant.io) and [HACS](https://hacs.xyz).
+- The heater manual is the manufacturer's document, retrieved from a public source
+  and included unmodified for reference.
+
+## License
+
+[MIT](LICENSE). The manufacturer's manual and third-party references remain the
+property of their respective owners.
