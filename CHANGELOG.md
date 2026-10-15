@@ -1,105 +1,70 @@
 # Release notes
 
-## 2.0.0-beta.1 — major-version preview
+## 2.0.0 — Room thermostat, local MQTT and safety shutdown
 
-This preview adds external room-temperature regulation and local MQTT setup while
-preserving existing 1.x installations in Compatibility mode. Background on the
-behavior is in the [design document](docs/design.md).
+Existing 1.x heaters keep working unchanged after the update, in **Compatibility**
+mode with the same entity IDs. All new features are opt-in through **Configure**.
+See the [migration guide](docs/migration.md).
 
-### New thermostat and control ownership
+### Room thermostat
 
-- The existing Luxeva climate can regulate an external HA temperature sensor,
-  exposing target temperature, heat/off and P1–P6 intensity in one entity.
-- Without an external sensor, it remains a manual heat/off and level controller.
-- Configure selects Luxeva climate or an external-controller actuator. Starts
-  through the unselected controller are rejected; stop remains available.
-- Hysteresis defaults to ±0.3°C with a five-minute minimum switching interval.
-  Missing/invalid temperature requests shutdown. Optional sensor-age checking and
-  Celsius/Fahrenheit/Kelvin conversion are supported.
-- Managed heating disables the device thermostat (`H0`). Its reported setpoint
-  remains visible, and raw `Tmp` has a separate internal-temperature diagnostic.
-  The built-in temperature is not presented as accurate room sensing.
+- The Luxeva climate entity can now regulate the room using any HA temperature
+  sensor: heat/off, target temperature and level P1–P6 in one entity.
+- Hysteresis of ±0.3 °C and a minimum of five minutes between heating changes,
+  both configurable. Celsius, Fahrenheit and Kelvin sensors are supported.
+- A missing, invalid or silent sensor stops heating. The maximum sensor age
+  defaults to 60 minutes; repeated identical readings count as fresh.
+- Without a sensor, the climate entity is a manual heat/off and level control.
+- Choose the heating controller per heater: **Luxeva climate**, or **Actuator** for
+  an existing Generic Thermostat helper. Starts through the other one are refused;
+  stop always works.
+- Managed heating disables the heater's built-in thermostat. Its own temperature
+  reading is shown separately as a diagnostic, since it reads hotter than the room.
 
-### Renewable safety countdown and persisted user sessions
+### Safety countdown and timer sessions
 
-- Luxeva climate starts with `T1` and renews it every ten minutes while heating is
-  needed and device/sensor data remain valid. Unconfirmed timer renewal requests
-  shutdown and disables regulation until a new explicit start. Later remote or app
-  starts are not blocked by that fault.
-- Heating started by the remote or app receives one protective one-hour interval
-  when external-start protection is enabled. HA does not take over or renew it.
-- Device status silence stops renewals without itself shutting the heater down.
-  Shutdown sends `B0` alone, leaving the device countdown in place until it is
-  confirmed off.
-- Long user timers become persisted absolute HA deadlines, implemented through
-  one-hour device intervals. Thermostat idle periods and HA restarts do not reset
-  or extend the session.
-- Timer zero cancels a managed session limit without stopping active heating or
-  removing its safety countdown. In Compatibility mode it retains the old off action.
-- MQTT timer commands and detectable IR timer changes are adopted as user sessions.
-  Own MQTT echoes do not create sessions. MAC topics remain native and independent.
-- At a user deadline, heating is stopped and regulation ends. Actuator restart
-  requests are blocked until the user explicitly clears or replaces the session.
-- Existing Timer Remaining still exposes device minutes; User session remaining
-  separately exposes the HA deadline. The firmware's whole-hour resolution means
-  exact partial-hour shutdown depends on HA being available at the deadline.
+- While HA heats, the heater always runs a one-hour countdown that HA renews every
+  ten minutes. If HA, the network or MQTT fails, the heater switches itself off
+  within an hour. A renewal the heater does not confirm stops that heating run.
+- Optional protection for remote/app starts: heating started outside HA gets one
+  one-hour countdown. HA does not take it over.
+- The Timer entity sets a user session of up to nine hours that survives HA
+  restarts and is not extended by idle periods. Timer 0 cancels the limit without
+  stopping heating. App timers and detectable remote timer changes become sessions.
+- New **User session remaining** sensor; **Timer Remaining** still shows the device
+  countdown.
 
-### Shared local MQTT service
+### Local MQTT (cloudless)
 
-- The Add integration menu now offers Heater or Local MQTT service. A heater can
-  be given a name such as Terrace or Patio during setup, which also names its
-  entities.
-- Each heater remains a separate MAC-based config entry/device with independent
-  settings, sessions and safety state. Multiple heaters can reuse one service.
-  Each broker address and port can belong to only one service entry. Changing a
-  service's broker ends the sessions of its heaters, then reconnects them.
-- Local service entries configure the broker address and expose broker health.
-  Home Assistant connects with the heater's fixed login, so no credentials are typed.
-  They do not synthesize heater status or replace HA's own MQTT configuration.
-- Optional Supervisor setup checks/installs Mosquitto, provisions the observed
-  firmware login, preserves existing options/users, rejects password conflicts,
-  and starts/restarts the broker only as necessary. Setup checks CONNACK.
-- DNS redirection remains user-managed, with instructions and a repair issue
-  until fresh local status for the selected heater arrives. No silent cloud fallback.
+- New **Local MQTT service** entry, shared by any number of heaters. It can install
+  and prepare the Mosquitto app, adding the heater's fixed login without creating an
+  HA user, and waits for the broker after a restart. No credentials to enter.
+- Broker health sensor, and a repair issue until the heater's status arrives
+  through the local broker. You redirect `iot.luxeva.com.tr` in your own DNS (and
+  firewall, across VLANs); there is no silent cloud fallback.
+- Changing a service safely stops and reconnects its heaters; a failed reconnect of
+  one heater does not affect the others.
 
-### Manual power-cut shutdown
+### Safety shutdown (power cut)
 
-- Configure an optional upstream HA switch, then use Safety shutdown to latch
-  heating off, cancel the session and request power-off independently of heater MQTT.
-- Latch state survives restart and blocks further heating publications, including
-  in Compatibility mode. Status distinguishes confirmed off, unconfirmed and failure.
-- Safety controls remain available when MQTT is unreachable at HA startup, or
-  when a referenced local service is missing.
-- Reset requires the upstream switch to report off; it never restores power or
-  heating. No automatic power-cut policy is introduced.
+- Optional upstream switch (plug or relay) per heater adds **Safety shutdown**,
+  **Reset safety shutdown** and **Safety shutdown active**.
+- Shutdown latches heating off in every mode and requests power-off without waiting
+  for MQTT. The latch survives restarts; reset never restores power or heating.
 
-### Migration and compatibility
+### Setup and other changes
 
-- Existing entries migrate in place to Compatibility mode. Device identity, MAC,
-  entity unique IDs and old timer/actuator behavior are preserved.
-- Generic Thermostat helpers remain separate user configuration. Moving to the
-  Luxeva thermostat is opt-in; disable the old helper first.
-- Changing configuration ends the current session and leaves heating off.
-- Minimum HA version for this preview is 2026.9.4. See [migration](docs/migration.md)
-  and [local setup](docs/local-mqtt.md).
+- Optional heater name at setup (for example Terrace), used for the device and
+  entity IDs.
+- Saving a heater's configuration ends its session and leaves it off.
+- Hungarian translation updated. Minimum Home Assistant version is 2026.9.4.
+- New documentation: [design](docs/design.md), [MQTT protocol](docs/mqtt-protocol.md),
+  [infrared protocol](docs/ir-protocol.md) and [local MQTT setup](docs/local-mqtt.md).
 
-### Protocol documentation
+### Known limitations
 
-- Added the saved manufacturer manual, an [MQTT protocol](docs/mqtt-protocol.md)
-  description, the full [IR specification](docs/ir-protocol.md), a machine-readable
-  button map, decoder, capture evidence, MQTT correlations and PCAP findings.
-- IR encoding matches the protocol named Xiaomi in IrpTransmogrifier, verified
-  against 298 received frames. No generated IR transmission has been heater-tested.
-
-### Validation and remaining device acceptance
-
-Automated tests cover migration, ownership, thermostat regulation, sensor failure,
-renewal confirmation, session persistence/expiry, command echoes, external timers,
-power-cut failure/latching, provisioning and independent heaters sharing a broker.
-These are software checks, not proof of physical operation.
-
-Before stable release, verify MQTT activation from standby, repeated `T1` renewal,
-local DNS/broker operation and upstream relay behavior on the real device. IR-only
-same-value timer resets can be indistinguishable from ordinary status; external
-long timers cannot be shortened while HA is absent. The official app's full backend
-and OTA protocol are not implemented or claimed.
+- Verified on hardware: local MQTT through DNS redirection with the fixed login.
+  Not yet verified: repeated countdown renewal in Luxeva climate mode, MQTT start
+  from standby, and upstream relay behavior.
+- Remote timer resets that leave the remaining time unchanged cannot be detected.
+  The final partial hour of a session is enforced by HA, so it depends on HA running.

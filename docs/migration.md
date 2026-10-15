@@ -73,9 +73,9 @@ Reconfiguration intentionally ends the current session and leaves heating off.
 A safety latch is retained regardless of control mode. Never remove a latch by
 switching ownership: use Reset safety shutdown while the upstream switch reports off.
 
-## Preview and rollback
+## Rollback
 
-This is a major-version beta. First verify one heater before moving others. Keep
+This is a major version. First verify one heater before moving others. Keep
 an HA backup before upgrading. Returning to 1.x requires restoring its older
 config-entry/storage state from backup; a v2 entry should not be downgraded merely
 by replacing the Python files. Re-selecting Compatibility in v2 is the supported

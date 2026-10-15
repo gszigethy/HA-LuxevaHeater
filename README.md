@@ -19,8 +19,8 @@ off within an hour.
 > **Remotely operating a heater can cause fire, injury or property damage.**
 > Use it only with heaters suitable for unattended operation, keep combustible
 > materials away, and follow the manufacturer's instructions. You accept these
-> risks during setup. Version 2.0 is a beta that has not yet been fully tested on
-> hardware; see the [release notes](CHANGELOG.md).
+> risks during setup. Some 2.0 features are not yet verified on hardware; see the
+> [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > This is an independent community project. It is **not affiliated with, endorsed
