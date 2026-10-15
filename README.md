@@ -91,8 +91,9 @@ any Generic Thermostat helper that controls it.
 
 Add **Luxeva Heater → Local MQTT service** once, optionally letting it install and
 prepare the Mosquitto app, then select it in each heater's settings. You must
-redirect `iot.luxeva.com.tr` to your broker in your own DNS. See
-[Local MQTT setup](docs/local-mqtt.md).
+redirect `iot.luxeva.com.tr` to your broker in your own DNS. If the heater and
+Home Assistant are on separate VLANs, also allow the heater through your firewall to
+the broker on TCP 1883. See [Local MQTT setup](docs/local-mqtt.md).
 
 ## Entities
 

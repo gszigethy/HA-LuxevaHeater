@@ -53,7 +53,10 @@ heater should move.
 
 ## Network steps the user must perform
 
-1. Make the broker reachable from the heater's network on **TCP 1883**.
+1. Make the broker reachable from the heater's network on **TCP 1883**. If the
+   heater and Home Assistant are on separate VLANs or subnets, add a firewall rule
+   allowing the heater to reach the broker's LAN IP on TCP 1883. The heater also
+   needs DNS (UDP/TCP 53) to the resolver that carries the override.
 2. Redirect **iot.luxeva.com.tr** to the broker's **LAN IP** using network DNS.
    `core-mosquitto` is an HA-internal hostname, not the address to give the heater.
 3. Ensure the heater actually uses that DNS resolver. Allow for cached answers and
