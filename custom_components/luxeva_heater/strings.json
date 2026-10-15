@@ -48,6 +48,9 @@
           "username": "MQTT username",
           "password": "MQTT password",
           "prepare_mosquitto": "Install/configure Mosquitto and provision the heater login (may restart the broker)"
+        },
+        "data_description": {
+          "prepare_mosquitto": "If Mosquitto is already installed, this only adds the heater login when it is missing and keeps all other logins and settings."
         }
       },
       "prepare": {
@@ -97,6 +100,9 @@
           "username": "MQTT username",
           "password": "MQTT password",
           "prepare_mosquitto": "Install/configure Mosquitto and provision the heater login (may restart the broker)"
+        },
+        "data_description": {
+          "prepare_mosquitto": "If Mosquitto is already installed, this only adds the heater login when it is missing and keeps all other logins and settings."
         }
       },
       "prepare": {

@@ -48,6 +48,9 @@
           "username": "MQTT-felhasználónév",
           "password": "MQTT-jelszó",
           "prepare_mosquitto": "Mosquitto telepítése/beállítása és az eszköz belépési adatainak létrehozása (újraindíthatja a brókert)"
+        },
+        "data_description": {
+          "prepare_mosquitto": "Ha a Mosquitto már telepítve van, csak a fűtőtest belépési adatait adja hozzá, ha hiányoznak, a többi felhasználót és beállítást megtartja."
         }
       },
       "prepare": {
@@ -97,6 +100,9 @@
           "username": "MQTT-felhasználónév",
           "password": "MQTT-jelszó",
           "prepare_mosquitto": "Mosquitto telepítése/beállítása és az eszköz belépési adatainak létrehozása (újraindíthatja a brókert)"
+        },
+        "data_description": {
+          "prepare_mosquitto": "Ha a Mosquitto már telepítve van, csak a fűtőtest belépési adatait adja hozzá, ha hiányoznak, a többi felhasználót és beállítást megtartja."
         }
       },
       "prepare": {
