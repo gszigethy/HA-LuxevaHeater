@@ -14,12 +14,12 @@ by Terrace, Patio and other heaters, or multiple services can be configured.
 
 | Entry | Example | Responsibility |
 | --- | --- | --- |
-| Local MQTT service | Local MQTT — core-mosquitto | Broker address, HA connection credentials, setup and connection diagnostic |
+| Local MQTT service | Local MQTT — core-mosquitto | Broker address, setup and connection diagnostic |
 | Heater | Terrace | Its own MAC, climate, sensors, actuator and safety policy |
 | Heater | Patio | Separate MAC and independent control; may reuse the same service |
 
 The service diagnostic authenticates to the broker without sending commands.
-Connected means the **broker** accepts the configured HA login. A heater becomes
+Connected means the **broker** accepts the heater login. A heater becomes
 available only after its own fresh, non-retained status arrives.
 
 ## Automatic Mosquitto preparation
@@ -39,8 +39,10 @@ This action is not repeated on every heater setup or HA restart.
 The observed firmware uses `luxeva@us` / `luxeva@pw`. Two captured connections from
 one heater used that pair; its universality across models is not established.
 Mosquitto's local `logins` feature provisions it without creating a HA UI account.
-The service's HA connection credentials may be a different valid broker login.
-Custom brokers or firmware may need manual device-login provisioning.
+Home Assistant connects with the same login, so there are no credentials to enter;
+the broker must accept this login in any case for the heater to connect. On other
+brokers, add this login yourself. If you use per-user ACLs, the login also needs
+to publish to `inTopic/<MAC>` and subscribe to `outTopic/<MAC>` for HA.
 
 Without Supervisor, leave automatic preparation unchecked and supply an existing
 broker. The integration does not replace HA's configured MQTT integration or

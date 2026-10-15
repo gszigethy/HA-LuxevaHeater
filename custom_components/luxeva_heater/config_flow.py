@@ -23,7 +23,6 @@ from .const import (
     CONF_LOCAL_SERVICE,
     CONF_MAC,
     CONF_MIN_CYCLE,
-    CONF_PASSWORD,
     CONF_PORT,
     CONF_POWER_SWITCH,
     CONF_PREPARE_BROKER,
@@ -31,13 +30,10 @@ from .const import (
     CONF_SENSOR,
     CONF_SENSOR_TIMEOUT,
     CONF_TOLERANCE,
-    CONF_USERNAME,
     CONNECTION_CLOUD,
     CONNECTION_LOCAL,
     DEFAULT_OPTIONS,
     DEFAULT_PORT,
-    DEVICE_PASSWORD,
-    DEVICE_USERNAME,
     DOMAIN,
     ENTRY_HEATER,
     ENTRY_LOCAL_SERVICE,
@@ -120,10 +116,6 @@ def _broker_schema() -> vol.Schema:
             vol.Required(CONF_BROKER): str,
             vol.Required(CONF_PORT): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=65535)
-            ),
-            vol.Optional(CONF_USERNAME): str,
-            vol.Optional(CONF_PASSWORD): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
             ),
             vol.Optional(CONF_PREPARE_BROKER, default=False): bool,
         }
@@ -316,8 +308,6 @@ class LuxevaConfigFlow(BrokerSetupMixin, config_entries.ConfigFlow, domain=DOMAI
                 {
                     CONF_BROKER: "core-mosquitto",
                     CONF_PORT: DEFAULT_PORT,
-                    CONF_USERNAME: DEVICE_USERNAME,
-                    CONF_PASSWORD: DEVICE_PASSWORD,
                 }
                 | (user_input or self._values),
             ),

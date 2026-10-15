@@ -8,7 +8,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import pytest
 
 from custom_components import luxeva_heater
-from custom_components.luxeva_heater.const import CONF_MAC
+from custom_components.luxeva_heater.const import (
+    CONF_MAC,
+    DEVICE_PASSWORD,
+    DEVICE_USERNAME,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -167,6 +171,9 @@ def test_two_heaters_reuse_service_but_keep_their_native_mac_topics():
             entry.options = {"connection": "local", "local_service": "shared"}
             assert asyncio.run(luxeva_heater.async_setup_entry(hass, entry))
     assert coordinators[0].broker == coordinators[1].broker == "local-broker"
+    # The service's stored "u"/"p" are ignored in favor of the device login.
+    assert coordinators[0].username == DEVICE_USERNAME
+    assert coordinators[0].password == DEVICE_PASSWORD
     assert coordinators[0].out_topic == "outTopic/00:AA:11:BB:22:CC"
     assert coordinators[1].out_topic == "outTopic/00:AA:11:BB:22:DD"
     assert coordinators[0].client_id != coordinators[1].client_id

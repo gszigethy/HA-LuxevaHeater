@@ -41,12 +41,10 @@
       },
       "local_service": {
         "title": "Local MQTT service",
-        "description": "Configure a shared local MQTT service once, then select it for any number of heater entries. On HA OS, core-mosquitto is the usual internal hostname. Other installations need an existing broker. Automatic preparation requires Supervisor; it preserves other logins but may restart Mosquitto and briefly disconnect other MQTT devices. The supplied login was observed on the tested heater; other firmware may differ. You must redirect iot.luxeva.com.tr to the broker LAN address in your network DNS. A successful broker check does not yet prove the heater has been redirected. Custom ACLs must allow native MAC-based inTopic, outTopic and OTA_Ready topics.",
+        "description": "Configure a shared local MQTT service once, then select it for any number of heater entries. On HA OS, core-mosquitto is the usual internal hostname. Other installations need an existing broker. Automatic preparation requires Supervisor; it preserves other logins but may restart Mosquitto and briefly disconnect other MQTT devices. Home Assistant uses the heater's fixed login (luxeva@us), so the broker must accept it; the checkbox below adds it. You must redirect iot.luxeva.com.tr to the broker LAN address in your network DNS. A successful broker check does not yet prove the heater has been redirected. Custom ACLs must allow native MAC-based inTopic, outTopic and OTA_Ready topics.",
         "data": {
           "broker": "Broker hostname or IP address",
           "port": "MQTT port",
-          "username": "MQTT username",
-          "password": "MQTT password",
           "prepare_mosquitto": "Install/configure Mosquitto and provision the heater login (may restart the broker)"
         },
         "data_description": {
@@ -93,12 +91,10 @@
       },
       "local_service": {
         "title": "Local MQTT service",
-        "description": "Configure a shared local MQTT service once, then select it for any number of heater entries. On HA OS, core-mosquitto is the usual internal hostname. Other installations need an existing broker. Automatic preparation requires Supervisor; it preserves other logins but may restart Mosquitto and briefly disconnect other MQTT devices. The supplied login was observed on the tested heater; other firmware may differ. You must redirect iot.luxeva.com.tr to the broker LAN address in your network DNS. A successful broker check does not yet prove the heater has been redirected. Custom ACLs must allow native MAC-based inTopic, outTopic and OTA_Ready topics.",
+        "description": "Configure a shared local MQTT service once, then select it for any number of heater entries. On HA OS, core-mosquitto is the usual internal hostname. Other installations need an existing broker. Automatic preparation requires Supervisor; it preserves other logins but may restart Mosquitto and briefly disconnect other MQTT devices. Home Assistant uses the heater's fixed login (luxeva@us), so the broker must accept it; the checkbox below adds it. You must redirect iot.luxeva.com.tr to the broker LAN address in your network DNS. A successful broker check does not yet prove the heater has been redirected. Custom ACLs must allow native MAC-based inTopic, outTopic and OTA_Ready topics.",
         "data": {
           "broker": "Broker hostname or IP address",
           "port": "MQTT port",
-          "username": "MQTT username",
-          "password": "MQTT password",
           "prepare_mosquitto": "Install/configure Mosquitto and provision the heater login (may restart the broker)"
         },
         "data_description": {

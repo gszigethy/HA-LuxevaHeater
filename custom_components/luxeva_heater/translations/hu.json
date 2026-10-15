@@ -41,12 +41,10 @@
       },
       "local_service": {
         "title": "Helyi MQTT-szolgáltatás",
-        "description": "Egyszer állítsa be, majd válassza ki több fűtőtesthez. HA OS alatt a szokásos belső cím core-mosquitto. Az automatikus előkészítés Supervisor-t igényel és megőrzi a többi belépési adatot, de újraindíthatja a Mosquitto brókert. Más telepítésnél használjon meglévő brókert. A megadott belépési adatokat a tesztelt eszközön figyeltük meg. Az iot.luxeva.com.tr nevet a hálózati DNS-ben irányítsa a bróker LAN-címére. A sikeres brókerellenőrzés még nem igazolja az eszköz átirányítását. Egyéni ACL-ben engedélyezze a MAC-alapú inTopic, outTopic és OTA_Ready témákat.",
+        "description": "Egyszer állítsa be, majd válassza ki több fűtőtesthez. HA OS alatt a szokásos belső cím core-mosquitto. Az automatikus előkészítés Supervisor-t igényel és megőrzi a többi belépési adatot, de újraindíthatja a Mosquitto brókert. Más telepítésnél használjon meglévő brókert. A Home Assistant a fűtőtest rögzített belépési adataival (luxeva@us) csatlakozik, ezért a brókernek el kell fogadnia; az alábbi jelölőnégyzet hozzáadja. Az iot.luxeva.com.tr nevet a hálózati DNS-ben irányítsa a bróker LAN-címére. A sikeres brókerellenőrzés még nem igazolja az eszköz átirányítását. Egyéni ACL-ben engedélyezze a MAC-alapú inTopic, outTopic és OTA_Ready témákat.",
         "data": {
           "broker": "MQTT-kiszolgáló neve vagy IP-címe",
           "port": "MQTT-port",
-          "username": "MQTT-felhasználónév",
-          "password": "MQTT-jelszó",
           "prepare_mosquitto": "Mosquitto telepítése/beállítása és az eszköz belépési adatainak létrehozása (újraindíthatja a brókert)"
         },
         "data_description": {
@@ -93,12 +91,10 @@
       },
       "local_service": {
         "title": "Helyi MQTT-szolgáltatás",
-        "description": "Egyszer állítsa be, majd válassza ki több fűtőtesthez. HA OS alatt a szokásos belső cím core-mosquitto. Az automatikus előkészítés Supervisor-t igényel és megőrzi a többi belépési adatot, de újraindíthatja a Mosquitto brókert. Más telepítésnél használjon meglévő brókert. A megadott belépési adatokat a tesztelt eszközön figyeltük meg. Az iot.luxeva.com.tr nevet a hálózati DNS-ben irányítsa a bróker LAN-címére. A sikeres brókerellenőrzés még nem igazolja az eszköz átirányítását. Egyéni ACL-ben engedélyezze a MAC-alapú inTopic, outTopic és OTA_Ready témákat.",
+        "description": "Egyszer állítsa be, majd válassza ki több fűtőtesthez. HA OS alatt a szokásos belső cím core-mosquitto. Az automatikus előkészítés Supervisor-t igényel és megőrzi a többi belépési adatot, de újraindíthatja a Mosquitto brókert. Más telepítésnél használjon meglévő brókert. A Home Assistant a fűtőtest rögzített belépési adataival (luxeva@us) csatlakozik, ezért a brókernek el kell fogadnia; az alábbi jelölőnégyzet hozzáadja. Az iot.luxeva.com.tr nevet a hálózati DNS-ben irányítsa a bróker LAN-címére. A sikeres brókerellenőrzés még nem igazolja az eszköz átirányítását. Egyéni ACL-ben engedélyezze a MAC-alapú inTopic, outTopic és OTA_Ready témákat.",
         "data": {
           "broker": "MQTT-kiszolgáló neve vagy IP-címe",
           "port": "MQTT-port",
-          "username": "MQTT-felhasználónév",
-          "password": "MQTT-jelszó",
           "prepare_mosquitto": "Mosquitto telepítése/beállítása és az eszköz belépési adatainak létrehozása (újraindíthatja a brókert)"
         },
         "data_description": {

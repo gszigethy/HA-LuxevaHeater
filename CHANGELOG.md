@@ -53,7 +53,8 @@ behavior is in the [design document](docs/design.md).
   settings, sessions and safety state. Multiple heaters can reuse one service.
   Each broker address and port can belong to only one service entry. Changing a
   service's broker ends the sessions of its heaters, then reconnects them.
-- Local service entries configure broker credentials and expose broker health.
+- Local service entries configure the broker address and expose broker health.
+  Home Assistant connects with the heater's fixed login, so no credentials are typed.
   They do not synthesize heater status or replace HA's own MQTT configuration.
 - Optional Supervisor setup checks/installs Mosquitto, provisions the observed
   firmware login, preserves existing options/users, rejects password conflicts,

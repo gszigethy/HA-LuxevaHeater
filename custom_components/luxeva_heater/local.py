@@ -16,9 +16,7 @@ from datetime import timedelta
 
 from .const import (
     CONF_BROKER,
-    CONF_PASSWORD,
     CONF_PORT,
-    CONF_USERNAME,
     DEVICE_PASSWORD,
     DEVICE_USERNAME,
     DOMAIN,
@@ -80,8 +78,9 @@ async def async_probe_broker(hass, options: dict[str, Any]) -> bool:
             client_id="luxeva-check-" + __import__("uuid").uuid4().hex[:12],
         )
         client.connect_timeout = 5
-        if options.get(CONF_USERNAME):
-            client.username_pw_set(options[CONF_USERNAME], options.get(CONF_PASSWORD))
+        # The broker must accept the heater's fixed login anyway, so HA uses it
+        # too: there is no separately typed credential to get wrong.
+        client.username_pw_set(DEVICE_USERNAME, DEVICE_PASSWORD)
 
         def connected(_client, _userdata, _flags, reason, _properties):
             nonlocal accepted

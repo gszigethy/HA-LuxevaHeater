@@ -277,7 +277,9 @@ def test_duplicate_broker_endpoint_is_rejected_on_edit(monkeypatch):
     assert taken["errors"] == {"base": "broker_in_use"}
     # Keeping its own endpoint while changing credentials is allowed.
     own = asyncio.run(
-        flow.async_step_init({"broker": "broker-b", "port": 1883, "username": "u"})
+        flow.async_step_init(
+            {"broker": "broker-b", "port": 1883, "prepare_mosquitto": True}
+        )
     )
     assert own["type"] == "progress"
 
@@ -330,3 +332,9 @@ def test_heater_name_becomes_title_and_device_name():
     unnamed = asyncio.run(run("   "))
     assert unnamed["title"] == "Luxeva Heater 00:AA:11:BB:22:CC"
     assert "name" not in unnamed["data"]
+
+
+def test_broker_form_asks_for_no_credentials():
+    # The heater's login is fixed in firmware; typing it is only a failure point.
+    fields = {str(key) for key in module._broker_schema().schema}
+    assert fields == {"broker", "port", "prepare_mosquitto"}

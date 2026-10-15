@@ -84,6 +84,8 @@ Notes:
 
 - Its own client ID is derived from the heater MAC without separators; it never
   copies the device's `LuxevaClient-` ID, and it uses its own keepalive.
+- On a local broker it logs in with the heater's fixed login; on the cloud broker
+  it connects without credentials.
 - It subscribes to `outTopic/<MAC>`, and in the managed modes also to
   `inTopic/<MAC>` to recognize app commands. Its own publications are recognized
   by their echo and ignored.

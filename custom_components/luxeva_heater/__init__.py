@@ -17,13 +17,13 @@ from .const import (
     CONF_ENTRY_TYPE,
     CONF_LOCAL_SERVICE,
     CONF_MAC,
-    CONF_PASSWORD,
     CONF_PORT,
-    CONF_USERNAME,
     CONNECTION_LOCAL,
     DEFAULT_BROKER,
     DEFAULT_OPTIONS,
     DEFAULT_PORT,
+    DEVICE_PASSWORD,
+    DEVICE_USERNAME,
     DOMAIN,
     ENTRY_HEATER,
     ENTRY_LOCAL_SERVICE,
@@ -99,8 +99,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuxevaConfigEntry) -> bo
     broker = broker_options.get(CONF_BROKER, DEFAULT_BROKER)
     port = broker_options.get(CONF_PORT, DEFAULT_PORT)
     coordinator = LuxevaCoordinator(hass, entry.data[CONF_MAC], broker, port)
-    coordinator.username = broker_options.get(CONF_USERNAME)
-    coordinator.password = broker_options.get(CONF_PASSWORD)
+    if options[CONF_CONNECTION] == CONNECTION_LOCAL:
+        # HA connects with the heater's fixed firmware login, which the local
+        # broker must accept for the heater itself; stored credentials are ignored.
+        coordinator.username = DEVICE_USERNAME
+        coordinator.password = DEVICE_PASSWORD
     coordinator.connection = options[CONF_CONNECTION]
     if entry.data.get(CONF_NAME):
         coordinator.device_name = entry.data[CONF_NAME]

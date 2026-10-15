@@ -104,9 +104,11 @@ def test_probe_checks_authentication_and_cleans_up(monkeypatch):
     hass = SimpleNamespace(
         async_add_executor_job=AsyncMock(side_effect=lambda fn: fn())
     )
+    # Saved credentials from older entries are ignored: HA always logs in
+    # with the heater's fixed firmware login, which the broker must accept.
     options = {"broker": "broker", "port": 1883, "username": "u", "password": "p"}
     assert asyncio.run(local.async_probe_broker(hass, options))
-    client.username_pw_set.assert_called_once_with("u", "p")
+    client.username_pw_set.assert_called_once_with(DEVICE_USERNAME, DEVICE_PASSWORD)
     client.subscribe.assert_not_called()
     client.publish.assert_not_called()
     client.disconnect.assert_called_once()

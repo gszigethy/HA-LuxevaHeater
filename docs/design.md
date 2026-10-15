@@ -31,7 +31,7 @@ it is built (technical design). For the wire formats see the
 | `LuxevaCoordinator` ([coordinator.py](../custom_components/luxeva_heater/coordinator.py)) | One paho-mqtt client per heater. Parses status, publishes commands, marks the heater unavailable after 30 s of silence. Never synthesizes device status. |
 | `LuxevaControl` ([control.py](../custom_components/luxeva_heater/control.py)) | The single owner of heating decisions for a heater: thermostat regulation, safety-timer renewal, user sessions and the safety latch. All entities call into it, so they cannot issue conflicting commands. |
 | Entities | Thin views and inputs over the coordinator and controller. |
-| Local service entry ([local.py](../custom_components/luxeva_heater/local.py)) | Broker address and credentials shared by several heaters, optional Mosquitto preparation, broker health sensor. It owns no heater state. |
+| Local service entry ([local.py](../custom_components/luxeva_heater/local.py)) | Broker address shared by several heaters, optional Mosquitto preparation, broker health sensor. It owns no heater state. |
 
 Each heater is its own config entry and device, identified by its MAC. Several
 heaters may share one local service. The controller runs on the HA event loop and
