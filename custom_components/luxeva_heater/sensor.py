@@ -90,24 +90,15 @@ class LuxevaThermostatSensor(SensorEntity):
         return f"{hts} °C"
 
 
-class LuxevaTimerSensor(SensorEntity):
-    """Remaining countdown time in minutes, read directly from outTopic Tmr field.
-
-    Updates every ~2 s as the device publishes status. Returns 0 when no
-    timer is active (Tmr == 00:00).
-    """
+class _LuxevaDeviceSensor(SensorEntity):
+    """Push-updated heater sensor. Defines no _attr_name, so subclasses can
+    take their name from a translation_key."""
 
     _attr_has_entity_name = True
-    _attr_name: str | None = "Timer Remaining"
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_should_poll = False
-    _attr_icon = "mdi:timer-outline"
 
     def __init__(self, coordinator: LuxevaCoordinator) -> None:
         self._coordinator = coordinator
-        self._attr_unique_id = f"{coordinator.client_id}_timer_remaining"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.client_id)},
         )
@@ -128,6 +119,24 @@ class LuxevaTimerSensor(SensorEntity):
     def available(self) -> bool:
         return self._coordinator.data.get("available", False)
 
+
+class LuxevaTimerSensor(_LuxevaDeviceSensor):
+    """Remaining countdown time in minutes, read directly from outTopic Tmr field.
+
+    Updates every ~2 s as the device publishes status. Returns 0 when no
+    timer is active (Tmr == 00:00).
+    """
+
+    _attr_name = "Timer Remaining"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_icon = "mdi:timer-outline"
+
+    def __init__(self, coordinator: LuxevaCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.client_id}_timer_remaining"
+
     @property
     def native_value(self) -> int:
         """Return remaining minutes from the outTopic Tmr HH:MM field."""
@@ -140,10 +149,9 @@ class LuxevaTimerSensor(SensorEntity):
             return 0
 
 
-class LuxevaInternalTemperature(LuxevaTimerSensor):
+class LuxevaInternalTemperature(_LuxevaDeviceSensor):
     """Raw internal reading, deliberately not presented as room temperature."""
 
-    _attr_name = None
     _attr_translation_key = "internal_temperature"
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -160,12 +168,13 @@ class LuxevaInternalTemperature(LuxevaTimerSensor):
         return self._coordinator.data.get("tmp")
 
 
-class LuxevaSessionSensor(LuxevaTimerSensor):
+class LuxevaSessionSensor(_LuxevaDeviceSensor):
     """HA session time is distinct from the device safety countdown."""
 
-    _attr_name = None
     _attr_translation_key = "session_remaining"
-    _attr_state_class = None
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_icon = "mdi:timer-outline"
 
     def __init__(self, coordinator):
         super().__init__(coordinator)

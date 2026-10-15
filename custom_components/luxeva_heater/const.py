@@ -59,4 +59,6 @@ ENTRY_LOCAL_SERVICE = "local_service"
 CONF_LOCAL_SERVICE = "local_service"
 # Observed device firmware login. Not claimed to be universal to every model.
 DEVICE_USERNAME = "luxeva@us"
-DEVICE_PASSWORD = "luxeva@pw"
+DEVICE_PASSWORD = (
+    "luxeva@pw"  # NOSONAR - fixed firmware login, provisioned locally; not a secret
+)
