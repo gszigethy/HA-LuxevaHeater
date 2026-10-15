@@ -296,7 +296,7 @@ class LuxevaConfigFlow(BrokerSetupMixin, config_entries.ConfigFlow, domain=DOMAI
                 if key != CONF_PREPARE_BROKER
             }
             return self.async_create_entry(
-                title=f"Local MQTT — {values[CONF_BROKER]}",
+                title="Luxeva Local MQTT",
                 data={CONF_ENTRY_TYPE: ENTRY_LOCAL_SERVICE},
                 options=values,
             )

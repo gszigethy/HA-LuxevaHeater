@@ -720,3 +720,32 @@ def test_suspended_flag_is_exposed_for_the_transport(monkeypatch):
     assert r.control.suspended is False
     r.control.suspend()
     assert r.control.suspended is True
+
+
+def test_silent_sensor_is_rejected_by_default(monkeypatch):
+    # A sensor that keeps showing its last value but stops reporting must not
+    # regulate the heater indefinitely; the default limit is 60 minutes.
+    r = Rig(monkeypatch)
+    r.temperature(18, age=59)
+    assert r.control.temperature == 18
+    r.temperature(18, age=61)
+    assert r.control.temperature is None
+
+
+def test_stale_sensor_does_not_stop_a_remote_start_while_climate_is_off(monkeypatch):
+    r = Rig(monkeypatch)
+    r.temperature(18, age=120)  # not regulating, so the room sensor is irrelevant
+    r.report(prg=2, tmr="00:00")
+    r.advance(5)
+    assert r.commands == ["T1"]
+    assert r.control.problem is None
+
+
+def test_stale_sensor_stops_regulated_heating(monkeypatch):
+    r = Rig(monkeypatch)
+    r.control.turn_on()
+    r.report(prg=2, tmr="00:59")
+    r.temperature(18, age=61)
+    r.advance(5)
+    assert r.commands[-1] == "B0"
+    assert r.control.problem == "temperature_unavailable"

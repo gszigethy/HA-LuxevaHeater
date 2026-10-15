@@ -206,7 +206,7 @@ class LuxevaLocalServiceSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"local_service_{entry.entry_id}")},
             name=entry.title,
-            manufacturer="Luxeva community",
+            manufacturer="HA-LuxevaHeater",
             model="Local MQTT service",
         )
 

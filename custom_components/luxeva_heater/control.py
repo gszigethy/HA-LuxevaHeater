@@ -358,7 +358,14 @@ class LuxevaControl:
         power = self.hass.states.get(self.power_switch) if self.power_switch else None
         if self.power_switch and (power is None or power.state != STATE_ON):
             self.problem = "power_unavailable"
-        elif self.mode == MODE_CLIMATE and self.sensor and self.temperature is None:
+        elif (
+            # The room sensor only matters while HA regulates; it must not stop
+            # heating started by the remote while the climate is off.
+            self.mode == MODE_CLIMATE
+            and self.sensor
+            and self.enabled
+            and self.temperature is None
+        ):
             self.problem = "temperature_unavailable"
         elif not data["available"]:
             # Silence alone does not require shutdown: renewals stop and the

@@ -37,6 +37,9 @@
           "minimum_cycle_seconds": "Minimális kapcsolási idő (másodperc)",
           "sensor_timeout_minutes": "Érzékelőadat maximális kora (perc; 0: nincs korhatár)",
           "protect_external_starts": "Biztonsági időzítő alkalmazása távirányítós vagy alkalmazásból történő indításkor"
+        },
+        "data_description": {
+          "sensor_timeout_minutes": "A fűtés leáll, ha az érzékelő ennyi ideig nem küld adatot. Az ismétlődő azonos értékek frissnek számítanak. Állítsa hosszabbra az érzékelő leghosszabb csendes időszakánál; a 0 kikapcsolja az ellenőrzést (nem ajánlott)."
         }
       },
       "local_service": {
@@ -87,6 +90,9 @@
           "minimum_cycle_seconds": "Minimális kapcsolási idő (másodperc)",
           "sensor_timeout_minutes": "Érzékelőadat maximális kora (perc; 0: nincs korhatár)",
           "protect_external_starts": "Biztonsági időzítő alkalmazása távirányítós vagy alkalmazásból történő indításkor"
+        },
+        "data_description": {
+          "sensor_timeout_minutes": "A fűtés leáll, ha az érzékelő ennyi ideig nem küld adatot. Az ismétlődő azonos értékek frissnek számítanak. Állítsa hosszabbra az érzékelő leghosszabb csendes időszakánál; a 0 kikapcsolja az ellenőrzést (nem ajánlott)."
         }
       },
       "local_service": {

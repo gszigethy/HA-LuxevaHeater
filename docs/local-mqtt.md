@@ -14,7 +14,7 @@ by Terrace, Patio and other heaters, or multiple services can be configured.
 
 | Entry | Example | Responsibility |
 | --- | --- | --- |
-| Local MQTT service | Local MQTT — core-mosquitto | Broker address, setup and connection diagnostic |
+| Local MQTT service | Luxeva Local MQTT | Broker address, setup and connection diagnostic |
 | Heater | Terrace | Its own MAC, climate, sensors, actuator and safety policy |
 | Heater | Patio | Separate MAC and independent control; may reuse the same service |
 

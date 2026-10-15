@@ -62,8 +62,11 @@ integration never edits or deletes Generic Thermostat helpers or automations.
 - The selected level P1–P6 is kept while cycling. `heat` means regulation is
   enabled, including while idle.
 - Missing, unavailable, non-numeric, non-finite or restored sensor readings stop
-  heating and renewals. When valid readings return, regulation resumes. An
-  optional maximum reading age uses the sensor's last-reported time.
+  heating and renewals. When valid readings return, regulation resumes.
+- A sensor that sends nothing for longer than the maximum reading age (default
+  60 minutes) counts as failed, which catches a sensor stuck at its last value.
+  The age uses the sensor's last-reported time, so repeated identical readings
+  count as fresh.
 - Managed heating sends `H0` to disable the device's own thermostat. The built-in
   `Tmp` reading is exposed as an internal device temperature only: it reads
   substantially hotter than the room, as the manual also notes.

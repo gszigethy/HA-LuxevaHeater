@@ -78,7 +78,7 @@ Go to **Settings → Devices & services → Add integration → Luxeva Heater**,
 | Upstream power switch | Optional plug or relay that powers the heater; enables safety shutdown. |
 | Temperature tolerance | Hysteresis around the target, default ±0.3 °C. |
 | Minimum time between heating changes | Default 300 seconds. |
-| Maximum sensor reading age | Stop heating if the sensor stops reporting; 0 disables the check. |
+| Maximum sensor reading age | Stop heating if the sensor sends nothing for this long, default 60 minutes. Repeated identical readings count as fresh. Set it longer than your sensor's longest quiet period; 0 disables the check (not recommended). |
 | Safety timer for remote/app starts | Give heating started outside HA a one-hour countdown. |
 
 Add each heater separately. Change these settings later with **Configure**; saving

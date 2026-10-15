@@ -147,6 +147,7 @@ def test_local_service_checks_broker_and_creates_no_mac_entry(monkeypatch):
         assert done["type"] == "progress_done"
         result = await flow.async_step_local_service()
         assert result["data"] == {"entry_type": "local_service"}
+        assert result["title"] == "Luxeva Local MQTT"
         assert "mac" not in result["data"]
         assert "prepare_mosquitto" not in result["options"]
         # Service identity is the entry itself, never a mutable endpoint.

@@ -48,7 +48,8 @@ DEFAULT_OPTIONS: dict[str, Any] = {
     CONF_PORT: DEFAULT_PORT,
     CONF_TOLERANCE: 0.3,
     CONF_MIN_CYCLE: 300,
-    CONF_SENSOR_TIMEOUT: 0,
+    # A sensor silent this long counts as failed; 0 disables the check.
+    CONF_SENSOR_TIMEOUT: 60,
     CONF_PROTECT_EXTERNAL: True,
 }
 CONF_ENTRY_TYPE = "entry_type"

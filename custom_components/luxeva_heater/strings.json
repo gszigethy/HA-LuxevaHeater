@@ -37,6 +37,9 @@
           "minimum_cycle_seconds": "Minimum time between heating changes (seconds)",
           "sensor_timeout_minutes": "Maximum sensor reading age (minutes; 0 disables age checking)",
           "protect_external_starts": "Apply a safety timer to heating started by the remote or app"
+        },
+        "data_description": {
+          "sensor_timeout_minutes": "Heating stops if the sensor sends nothing for this long. Repeated identical readings count as fresh. Set it longer than the sensor's longest quiet period; 0 disables the check (not recommended)."
         }
       },
       "local_service": {
@@ -87,6 +90,9 @@
           "minimum_cycle_seconds": "Minimum time between heating changes (seconds)",
           "sensor_timeout_minutes": "Maximum sensor reading age (minutes; 0 disables age checking)",
           "protect_external_starts": "Apply a safety timer to heating started by the remote or app"
+        },
+        "data_description": {
+          "sensor_timeout_minutes": "Heating stops if the sensor sends nothing for this long. Repeated identical readings count as fresh. Set it longer than the sensor's longest quiet period; 0 disables the check (not recommended)."
         }
       },
       "local_service": {
