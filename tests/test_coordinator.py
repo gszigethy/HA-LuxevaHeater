@@ -231,3 +231,35 @@ def test_callbacks_after_loop_closed_do_not_raise() -> None:
 
     coordinator._on_disconnect(Mock(), None, None, DISCONNECT_ERROR, None)
     coordinator._on_message(Mock(), None, STATUS)
+
+
+def test_startup_does_not_require_reachable_broker(monkeypatch):
+    coordinator = make_coordinator()
+    client = Mock()
+    monkeypatch.setattr(
+        "custom_components.luxeva_heater.coordinator._make_mqtt_client",
+        lambda client_id: client,
+    )
+    asyncio.run(coordinator.async_connect())
+    client.connect_async.assert_called_once_with(
+        coordinator.broker, coordinator.port, keepalive=60
+    )
+    client.connect.assert_not_called()
+    client.loop_start.assert_called_once()
+    assert not coordinator.data["available"]
+
+
+def test_suspended_heater_publishes_no_start_commands() -> None:
+    coordinator = make_coordinator()
+    client = Mock()
+    client.is_connected.return_value = True
+    client.publish.return_value = SimpleNamespace(rc=mqtt.MQTT_ERR_SUCCESS)
+    coordinator._client = client
+    coordinator.control = SimpleNamespace(
+        latched=False, suspended=True, note_command=Mock()
+    )
+    # Any start-capable level command is refused; stop and timer commands pass.
+    assert coordinator.publish("B2") is False
+    assert coordinator.publish("B0") is True
+    assert coordinator.publish("T1") is True
+    assert [c.args[1] for c in client.publish.call_args_list] == ["B0", "T1"]
