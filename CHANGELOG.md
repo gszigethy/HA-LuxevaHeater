@@ -1,5 +1,13 @@
 # Release notes
 
+## 2.0.1 — Dependency maintenance
+
+- Update the Home Assistant test dependency from 2026.9.4 to 2026.10.1 ([#16](https://github.com/gszigethy/HA-LuxevaHeater/pull/16)).
+- Update Ruff from 0.16.10 to 0.17.0 ([#15](https://github.com/gszigethy/HA-LuxevaHeater/pull/15)).
+- Update the pinned Hassfest action in CI and release validation ([#14](https://github.com/gszigethy/HA-LuxevaHeater/pull/14)).
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.0 — Room thermostat, local MQTT and safety shutdown
 
 Existing 1.x heaters keep working unchanged after the update, in **Compatibility**
