@@ -1,0 +1,34 @@
+# Receive-only IR capture firmware (GPIO32 RX). The node was named
+# webasto-ir-capture during the capture session; the name has no other meaning.
+esphome:
+  name: luxeva-ir-capture
+  min_version: 2026.9.1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+
+remote_receiver:
+  id: receiver_ir
+  pin:
+    number: GPIO32
+    inverted: true
+  dump: raw
+  # Preserve all repeats in a button burst; measured gaps are 9.943-12.366ms.
+  # This setting is retained from the original capture firmware.
+  idle: 30ms
+  buffer_size: 64kb
+  filter: 50us
+  tolerance: 25%
+
+# Configured but never invoked: capture firmware emits no IR commands.
+remote_transmitter:
+  id: transmitter_ir
+  pin: GPIO26
+  carrier_duty_percent: 50%
+  non_blocking: true

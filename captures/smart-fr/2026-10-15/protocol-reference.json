@@ -1,0 +1,7 @@
+{
+  "source_url": "https://raw.githubusercontent.com/bengtmartensson/IrpTransmogrifier/master/src/main/resources/IrpProtocols.xml",
+  "retrieved_date": "2026-10-15",
+  "sha256": "fc9d3c5b978ee8dcc2873f0306df072f5c5619c0587f931cc22b70a99cb293ee",
+  "protocol": "Xiaomi",
+  "irp": "{36k,290,msb}<2,-2|2,-3|2,-4|2,-5>(1000u,-2,D:8,F:8,C:4,2,^30m)* {C=(D:4:4^D:4^F:4:4^F:4)} [D:0..255,F:0..255]"
+}
