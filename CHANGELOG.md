@@ -1,5 +1,14 @@
 # Release notes
 
+## 2.0.2 — Dependency maintenance
+
+- Update the Home Assistant test dependency from 2026.10.1 to 2026.10.2 ([#19](https://github.com/gszigethy/HA-LuxevaHeater/pull/19)).
+- Update the Supervisor test dependency from aiohasupervisor 0.6.0 to 0.7.0 ([#20](https://github.com/gszigethy/HA-LuxevaHeater/pull/20)).
+- Update Ruff from 0.17.0 to 0.17.1 ([#21](https://github.com/gszigethy/HA-LuxevaHeater/pull/21)).
+- Update the pinned Hassfest action in CI and release validation ([#18](https://github.com/gszigethy/HA-LuxevaHeater/pull/18)).
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.1 — Dependency maintenance
 
 - Update the Home Assistant test dependency from 2026.9.4 to 2026.10.1 ([#16](https://github.com/gszigethy/HA-LuxevaHeater/pull/16)).
