@@ -1,5 +1,15 @@
 # Release notes
 
+## 2.0.4 — Dependency maintenance
+
+- Update the Supervisor test dependency from aiohasupervisor 0.8.1 to 0.9.0 ([#31](https://github.com/gszigethy/HA-LuxevaHeater/pull/31)).
+- Update Ruff from 0.17.2 to 0.17.3 ([#30](https://github.com/gszigethy/HA-LuxevaHeater/pull/30)).
+- Update pytest from 9.1.1 to 9.2.0 ([#29](https://github.com/gszigethy/HA-LuxevaHeater/pull/29)).
+- Update mypy from 2.4.0 to 2.4.1 ([#28](https://github.com/gszigethy/HA-LuxevaHeater/pull/28)).
+- Update the pinned SonarQube scan action from 8.3.0 to 8.4.0 ([#27](https://github.com/gszigethy/HA-LuxevaHeater/pull/27)).
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.3 — Dependency maintenance
 
 - Update the Home Assistant test dependency from 2026.10.2 to 2026.10.4 ([#24](https://github.com/gszigethy/HA-LuxevaHeater/pull/24)).
