@@ -86,10 +86,33 @@ jobs:
           zip -r ../luxeva_heater.zip luxeva_heater             -x "*/__pycache__/*" "*.pyc"
           test -s ../luxeva_heater.zip
 
+      - name: Resolve release title from changelog
+        id: title
+        shell: bash
+        run: |
+          # Title is "vX.Y.Z <description>", the description coming from the
+          # "## X.Y.Z — <description>" changelog heading of the tagged version.
+          VERSION="${GITHUB_REF_NAME#v}"
+          DESCRIPTION="$(VERSION="$VERSION" python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          pattern = rf"^## {re.escape(os.environ['VERSION'])} — (.+)$"
+          match = re.search(pattern, Path("CHANGELOG.md").read_text(encoding="utf-8"), re.MULTILINE)
+          print(match.group(1).strip() if match else "")
+          PY
+          )"
+          if [ -z "$DESCRIPTION" ]; then
+            echo "::error::No '## ${VERSION} — <description>' heading in CHANGELOG.md"
+            exit 1
+          fi
+          echo "name=${GITHUB_REF_NAME} ${DESCRIPTION}" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
-          name: "Luxeva Heater ${{ github.ref_name }}"
+          name: ${{ steps.title.outputs.name }}
           generate_release_notes: true
           files: luxeva_heater.zip
           prerelease: ${{ contains(github.ref_name, 'a') || contains(github.ref_name, 'b') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'pre') }}
