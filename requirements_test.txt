@@ -1,4 +1,4 @@
-homeassistant==2026.10.4
+homeassistant==2026.11.0
 mypy==2.4.1
 paho-mqtt==2.2.0
 pytest==9.2.0
