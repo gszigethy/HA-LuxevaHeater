@@ -1,5 +1,15 @@
 # Release notes
 
+## 2.0.5 — Dependency maintenance
+
+- Update the Home Assistant test dependency from 2026.10.4 to 2026.11.0 ([#33](https://github.com/gszigethy/HA-LuxevaHeater/pull/33)).
+- Update the Supervisor test dependency from aiohasupervisor 0.9.0 to 0.10.0 ([#35](https://github.com/gszigethy/HA-LuxevaHeater/pull/35)).
+- Update the MQTT test dependency from paho-mqtt 2.1.0 to 2.2.0 ([#36](https://github.com/gszigethy/HA-LuxevaHeater/pull/36)).
+- Update Ruff from 0.17.3 to 0.17.4 ([#34](https://github.com/gszigethy/HA-LuxevaHeater/pull/34)).
+- Release titles are now built from the changelog heading ([#32](https://github.com/gszigethy/HA-LuxevaHeater/pull/32)).
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.4 — Dependency maintenance
 
 - Update the Supervisor test dependency from aiohasupervisor 0.8.1 to 0.9.0 ([#31](https://github.com/gszigethy/HA-LuxevaHeater/pull/31)).
