@@ -1,6 +1,6 @@
 homeassistant==2026.10.4
 mypy==2.4.1
-paho-mqtt==2.1.0
+paho-mqtt==2.2.0
 pytest==9.2.0
 pytest-cov==7.1.0
 ruff==0.17.4
