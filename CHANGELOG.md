@@ -1,5 +1,12 @@
 # Release notes
 
+## 2.0.7 — Documentation maintenance
+
+- Refresh the README: centered header with icon, release and CI badges, "Open in HACS" and "Add integration" buttons, a navigation row and simpler install steps ([#44](https://github.com/gszigethy/HA-LuxevaHeater/pull/44)).
+- Mark the HACS badge as Default, since the integration is in the HACS default list.
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.6 — Dependency maintenance
 
 - Update the Home Assistant test dependency from 2026.11.0 to 2026.11.1 ([#40](https://github.com/gszigethy/HA-LuxevaHeater/pull/40)).
