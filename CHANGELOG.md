@@ -1,5 +1,15 @@
 # Release notes
 
+## 2.0.6 — Dependency maintenance
+
+- Update the Home Assistant test dependency from 2026.11.0 to 2026.11.1 ([#40](https://github.com/gszigethy/HA-LuxevaHeater/pull/40)).
+- Update the Supervisor test dependency from aiohasupervisor 0.10.0 to 0.11.0 ([#42](https://github.com/gszigethy/HA-LuxevaHeater/pull/42)).
+- Update Ruff from 0.17.4 to 0.17.5 ([#41](https://github.com/gszigethy/HA-LuxevaHeater/pull/41)).
+- Update the release workflow action softprops/action-gh-release from 3.0.3 to 3.0.4 ([#39](https://github.com/gszigethy/HA-LuxevaHeater/pull/39)).
+- Update the SonarQube scan action from 8.4.0 to 8.5.0 ([#38](https://github.com/gszigethy/HA-LuxevaHeater/pull/38)).
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.5 — Dependency maintenance
 
 - Update the Home Assistant test dependency from 2026.10.4 to 2026.11.0 ([#33](https://github.com/gszigethy/HA-LuxevaHeater/pull/33)).
