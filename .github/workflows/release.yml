@@ -82,9 +82,26 @@ jobs:
       - name: Build integration ZIP
         shell: bash
         run: |
-          cd custom_components
-          zip -r ../luxeva_heater.zip luxeva_heater             -x "*/__pycache__/*" "*.pyc"
-          test -s ../luxeva_heater.zip
+          # HACS and the Marketplace extract the ZIP straight into
+          # custom_components/luxeva_heater/, so the files go at the ZIP root.
+          cd custom_components/luxeva_heater
+          zip -r ../../luxeva_heater.zip . -x "*__pycache__*" "*.pyc"
+          cd ../..
+          python - <<'PY'
+          import json
+          import zipfile
+
+          with zipfile.ZipFile("luxeva_heater.zip") as archive:
+              names = archive.namelist()
+              manifest = json.loads(archive.read("manifest.json"))
+          if manifest["domain"] != "luxeva_heater":
+              raise SystemExit(f"Unexpected domain {manifest['domain']}")
+          if any(name.startswith("luxeva_heater/") for name in names):
+              raise SystemExit("ZIP must not hold a luxeva_heater/ folder")
+          if "brand/icon.png" not in names:
+              raise SystemExit("ZIP is missing brand/icon.png")
+          print(f"luxeva_heater.zip: {len(names)} entries, manifest at the root")
+          PY
 
       - name: Resolve release title from changelog
         id: title

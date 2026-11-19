@@ -1,5 +1,12 @@
 # Release notes
 
+## 2.0.8 — Release packaging maintenance
+
+- Install from the `luxeva_heater.zip` release asset in HACS and the Home Assistant Marketplace (`zip_release` in `hacs.json`), so installs and updates show up in the download count.
+- Build the ZIP with the integration files at its root, the layout HACS and the Marketplace extract into `custom_components/luxeva_heater/`, and check that layout before each release.
+
+Heater behavior and the minimum supported Home Assistant version remain unchanged.
+
 ## 2.0.7 — Documentation maintenance
 
 - Refresh the README: centered header with icon, release and CI badges, "Open in HACS" and "Add integration" buttons, a navigation row and simpler install steps ([#44](https://github.com/gszigethy/HA-LuxevaHeater/pull/44)).
