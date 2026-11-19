@@ -1,5 +1,7 @@
 {
   "name": "Luxeva Heater",
   "render_readme": true,
-  "homeassistant": "2026.9.4"
+  "homeassistant": "2026.9.4",
+  "zip_release": true,
+  "filename": "luxeva_heater.zip"
 }
