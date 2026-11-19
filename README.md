@@ -13,7 +13,7 @@
   <a href="https://github.com/gszigethy/HA-LuxevaHeater/releases"><img alt="Release" src="https://img.shields.io/github/v/release/gszigethy/HA-LuxevaHeater"></a>
   <a href="https://github.com/gszigethy/HA-LuxevaHeater/actions/workflows/quality.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/gszigethy/HA-LuxevaHeater/quality.yml?branch=main"></a>
   <a href="https://hacs.xyz"><img alt="HACS Default" src="https://img.shields.io/badge/HACS-Default-41BDF5.svg"></a>
-  <a href="https://www.home-assistant.io"><img alt="Home Assistant 2026.9.4+" src="https://img.shields.io/badge/Home%20Assistant-2026.9.4%2B-blue"></a>
+  <a href="https://www.home-assistant.io"><img alt="Home Assistant 2026.11.0+" src="https://img.shields.io/badge/Home%20Assistant-2026.11.0%2B-blue"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
 </p>
 
@@ -70,7 +70,7 @@ off within an hour.
 
 ## Requirements
 
-- Home Assistant 2026.9.4 or newer.
+- Home Assistant 2026.11.0 or newer.
 - A heater already connected to Wi-Fi with the official Luxeva app.
 - The heater's MAC address, printed on its label.
 

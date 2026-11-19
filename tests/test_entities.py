@@ -50,8 +50,8 @@ def test_climate_state_and_commands() -> None:
     assert entity.hvac_mode == HVACMode.OFF
     assert entity.hvac_action == HVACAction.OFF
     assert entity.preset_mode is None
-    assert entity.current_temperature == 20.0
-    assert entity.target_temperature is None
+    assert entity.native_current_temperature == 20.0
+    assert entity.native_target_temperature is None
     assert entity.extra_state_attributes == {"timer": "00:00", "msg_sequence": 12}
 
     coordinator.data.update(prg=2, hts=24, tmp=20)

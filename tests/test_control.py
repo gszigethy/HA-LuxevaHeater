@@ -405,10 +405,10 @@ def test_managed_entities_share_policy_and_keep_original_unique_ids(monkeypatch)
     assert timer.unique_id == "00AA11BB22CC_timer"
     assert actuator.unique_id == "00AA11BB22CC_actuator"
     assert climate.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
-    assert climate.current_temperature == 18
-    assert climate.target_temperature == 21
+    assert climate.native_current_temperature == 18
+    assert climate.native_target_temperature == 21
     asyncio.run(climate.async_set_temperature(temperature=23))
-    assert climate.target_temperature == 23
+    assert climate.native_target_temperature == 23
     asyncio.run(climate.async_turn_on())
     assert climate.hvac_mode == HVACMode.HEAT
     assert climate.hvac_action == HVACAction.IDLE
