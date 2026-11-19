@@ -1,6 +1,8 @@
 # Luxeva Heater for Home Assistant
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
+[![Release](https://img.shields.io/github/v/release/gszigethy/HA-LuxevaHeater)](https://github.com/gszigethy/HA-LuxevaHeater/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/gszigethy/HA-LuxevaHeater/quality.yml?branch=main)](https://github.com/gszigethy/HA-LuxevaHeater/actions/workflows/quality.yml)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz)
 [![Home Assistant 2026.9.4+](https://img.shields.io/badge/Home%20Assistant-2026.9.4%2B-blue)](https://www.home-assistant.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
