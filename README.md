@@ -1,8 +1,37 @@
-# Luxeva Heater for Home Assistant
+<p align="center">
+  <img src="icon.png" alt="Luxeva Heater" width="120">
+</p>
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
-[![Home Assistant 2026.9.4+](https://img.shields.io/badge/Home%20Assistant-2026.9.4%2B-blue)](https://www.home-assistant.io)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<h1 align="center">Luxeva Heater for Home Assistant</h1>
+
+<p align="center">
+  <b>Turn a Luxeva Wi-Fi infrared heater into a real room thermostat,<br>
+  with a safety countdown that always runs on the device.</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/gszigethy/HA-LuxevaHeater/releases"><img alt="Release" src="https://img.shields.io/github/v/release/gszigethy/HA-LuxevaHeater"></a>
+  <a href="https://github.com/gszigethy/HA-LuxevaHeater/actions/workflows/quality.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/gszigethy/HA-LuxevaHeater/quality.yml?branch=main"></a>
+  <a href="https://hacs.xyz"><img alt="HACS Default" src="https://img.shields.io/badge/HACS-Default-41BDF5.svg"></a>
+  <a href="https://www.home-assistant.io"><img alt="Home Assistant 2026.9.4+" src="https://img.shields.io/badge/Home%20Assistant-2026.9.4%2B-blue"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
+</p>
+
+<p align="center">
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=gszigethy&repository=HA-LuxevaHeater&category=integration"><img alt="Open in HACS" src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
+  <a href="https://my.home-assistant.io/redirect/config_flow_start/?domain=luxeva_heater"><img alt="Add integration" src="https://my.home-assistant.io/badges/config_flow_start.svg"></a>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#entities">Entities</a> ·
+  <a href="#documentation">Documentation</a> ·
+  <a href="#troubleshooting">Troubleshooting</a>
+</p>
+
+---
 
 Control and monitor **Luxeva Wi-Fi infrared heaters** (such as the SMART-FR
 series) from Home Assistant, through the Luxeva cloud or your own local MQTT
@@ -29,15 +58,15 @@ off within an hour.
 
 ## Features
 
-- **Room thermostat**: heat/off, target temperature and heating level P1–P6 in one
-  climate entity, regulated by an external sensor of your choice.
-- **Safety countdown**: a one-hour device timer renewed while heating, so a lost
+- 🌡️ **Room thermostat**: heat/off, target temperature and heating level P1–P6 in
+  one climate entity, regulated by an external sensor of your choice.
+- 🛡️ **Safety countdown**: a one-hour device timer renewed while heating, so a lost
   connection always ends in shutdown.
-- **Timer sessions** of up to nine hours that survive HA restarts.
-- **Generic Thermostat support** through an actuator switch, for existing setups.
-- **Cloudless operation** with a local MQTT broker shared by several heaters.
-- **Safety shutdown** that cuts power through a separate smart plug or relay.
-- Live device state, also reflecting changes made with the remote or the app.
+- ⏱️ **Timer sessions** of up to nine hours that survive HA restarts.
+- 🔌 **Generic Thermostat support** through an actuator switch, for existing setups.
+- 🏠 **Cloudless operation** with a local MQTT broker shared by several heaters.
+- ⚡ **Safety shutdown** that cuts power through a separate smart plug or relay.
+- 🔄 Live device state, also reflecting changes made with the remote or the app.
 
 ## Requirements
 
@@ -49,9 +78,7 @@ off within an hour.
 
 **HACS (recommended)**
 
-1. In HACS, search for **Luxeva Heater**. If it is not listed, add
-   `https://github.com/gszigethy/HA-LuxevaHeater` under **⋮ → Custom repositories**
-   with type **Integration**.
+1. Click **Open in HACS** above, or search for **Luxeva Heater** in HACS.
 2. Download it. Beta versions appear when **Show beta versions** is enabled for the
    repository.
 3. Restart Home Assistant.
@@ -61,8 +88,8 @@ off within an hour.
 
 ## Configuration
 
-Go to **Settings → Devices & services → Add integration → Luxeva Heater**, choose
-**Heater**, and enter:
+Click **Add integration** above, or go to **Settings → Devices & services → Add
+integration → Luxeva Heater**. Choose **Heater**, and enter:
 
 1. **MAC address**, with or without separators, and an optional **name** such as
    Terrace or Patio. The name becomes the device name, so entity IDs read
