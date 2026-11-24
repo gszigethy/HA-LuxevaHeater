@@ -43,7 +43,7 @@ class LuxevaClimate(ClimateEntity):
     _attr_name = None  # main entity — device name is used directly
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_preset_modes = PRESET_MODES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TURN_ON
@@ -134,14 +134,14 @@ class LuxevaClimate(ClimateEntity):
         return LEVEL_TO_PRESET.get(prg) if prg > 0 else None
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         if self._control and self._control.sensor:
             return self._control.temperature
         tmp = self._coordinator.data.get("tmp")
         return float(tmp) if tmp is not None else None
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         return (
             self._control.target
             if self._control
