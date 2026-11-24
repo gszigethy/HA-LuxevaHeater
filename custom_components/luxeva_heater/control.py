@@ -37,6 +37,7 @@ from .const import (
     MODE_COMPATIBILITY,
     RENEW_SECONDS,
     TIMER_ACK_SECONDS,
+    TIMER_RETRIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,6 +76,8 @@ class LuxevaControl:
         self._last_lease: datetime | None = None
         self._awaiting_timer: datetime | None = None
         self._timer_confirmed = False
+        # Resends of the pending T1: QoS 0 commands can be lost or misapplied.
+        self._timer_retries = 0
         self._own_commands: deque[tuple[str, datetime]] = deque(maxlen=100)
         self._last_report: tuple[int, datetime] | None = None
         self._seen_status = False
@@ -247,6 +250,7 @@ class LuxevaControl:
         if previous.get("prg", 0) > 0 and data["prg"] == 0:
             self._timer_confirmed = False
             self._awaiting_timer = None
+            self._timer_retries = 0
             self._last_lease = None
             self._last_toggle = now
         if data["prg"] > 0 and previous.get("prg") != data["prg"]:
@@ -259,6 +263,7 @@ class LuxevaControl:
             if max(1, 59 - int(elapsed // 60)) <= minutes <= 60:
                 self._timer_confirmed = True
                 self._awaiting_timer = None
+                self._timer_retries = 0
                 if self.problem == "timer_unconfirmed":
                     self.problem = None
             elif (
@@ -314,6 +319,26 @@ class LuxevaControl:
             self._awaiting_timer = now
             self._timer_confirmed = False
 
+    def _retry_timer(self, now: datetime) -> bool:
+        """Resend an unconfirmed T1 before treating it as a fault.
+
+        Retries are only used while the heater reports status, so a Wi-Fi gap
+        cannot use them up; the heater cannot receive B0 during the gap either.
+        After TIMER_RETRIES unconfirmed resends, heating stops as before.
+        """
+        if self._timer_retries >= TIMER_RETRIES or not self.coordinator.publish("T1"):
+            return False
+        self._timer_retries += 1
+        _LOGGER.warning(
+            "Luxeva %s did not confirm its safety timer; sending it again (%d of %d)",
+            self.coordinator.mac,
+            self._timer_retries,
+            TIMER_RETRIES,
+        )
+        self._last_lease = now
+        self._awaiting_timer = now
+        return True
+
     def _stop_device(self, now: datetime) -> None:
         # Retry unconfirmed shutdowns at a bounded rate, including after reconnect.
         if not self.coordinator.data["available"]:
@@ -326,6 +351,7 @@ class LuxevaControl:
         # lost, the heater would keep running without its fallback countdown.
         self.coordinator.publish("B0")
         self._awaiting_timer = None
+        self._timer_retries = 0
         self._timer_confirmed = False
         self._last_lease = None
         self._last_toggle = now
@@ -375,10 +401,13 @@ class LuxevaControl:
             self.demand = False
             self.coordinator._notify_listeners()
             return
-        elif self._timer_fault or (
-            self._awaiting_timer
-            and (now - self._awaiting_timer).total_seconds() >= TIMER_ACK_SECONDS
-        ):
+        elif (
+            self._timer_fault
+            or (
+                self._awaiting_timer
+                and (now - self._awaiting_timer).total_seconds() >= TIMER_ACK_SECONDS
+            )
+        ) and (self._timer_fault or not self._retry_timer(now)):
             if not self._timer_fault:
                 _LOGGER.warning(
                     "Luxeva %s did not confirm its safety timer; stopping heating",
@@ -387,6 +416,7 @@ class LuxevaControl:
             self.problem = "timer_unconfirmed"
             self._timer_fault = True
             self._awaiting_timer = None
+            self._timer_retries = 0
             self.enabled = False
             self._save()
         if self.problem:

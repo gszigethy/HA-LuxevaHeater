@@ -11,6 +11,7 @@ import pytest
 
 from custom_components.luxeva_heater import control as module
 from custom_components.luxeva_heater.const import (
+    TIMER_RETRIES,
     CONF_CONTROL_MODE,
     CONF_MIN_CYCLE,
     CONF_POWER_SWITCH,
@@ -181,7 +182,7 @@ def test_missing_timer_ack_stops_and_requires_new_start(monkeypatch):
     r = Rig(monkeypatch)
     r.control.turn_on()
     r.report(prg=2, tmr="00:00")
-    r.advance(16)
+    exhaust_timer_retries(r)
     assert r.control.problem == "timer_unconfirmed"
     assert r.control.enabled is False
     assert r.commands[-1] == "B0"
@@ -189,6 +190,80 @@ def test_missing_timer_ack_stops_and_requires_new_start(monkeypatch):
     r.commands.clear()
     r.advance(600)
     assert not r.commands
+
+
+def test_unconfirmed_renewal_is_resent_once_before_stopping(monkeypatch):
+    # 2026-11-24: the heater answered a renewal with Tmr 00:00 while heating.
+    r = Rig(monkeypatch)
+    r.control.turn_on()
+    r.report(prg=2, tmr="00:59")
+    r.advance(600)
+    r.report(tmr="00:00")
+    r.commands.clear()
+    advance_ticks(r, 15)
+    assert r.commands == ["T1"]
+    assert r.control.problem is None
+    assert r.control.enabled
+    r.report(tmr="00:59")
+    advance_ticks(r, 60)
+    assert "B0" not in r.commands
+    assert r.control.problem is None
+    assert r.control.enabled
+
+
+def exhaust_timer_retries(r, windows=TIMER_RETRIES + 1):
+    for _ in range(windows):
+        r.advance(16)
+
+
+def test_timer_unconfirmed_for_two_minutes_stops_heating(monkeypatch):
+    r = Rig(monkeypatch)
+    r.control.turn_on()
+    r.report(prg=2, tmr="00:00")
+    advance_ticks(r, 115)
+    assert "B0" not in r.commands
+    assert r.commands.count("T1") == 8
+    assert r.control.problem is None
+    advance_ticks(r, 5)
+    assert r.commands[-1] == "B0"
+    assert r.commands.count("T1") == 8
+    assert r.control.problem == "timer_unconfirmed"
+    assert r.control.enabled is False
+
+
+def test_wifi_gap_during_retries_does_not_use_them_up(monkeypatch):
+    r = Rig(monkeypatch, sensor=False)
+    r.control.turn_on()
+    r.report(prg=2, tmr="00:59")
+    r.advance(600)
+    r.report(tmr="00:00")
+    advance_ticks(r, 15)
+    r.coordinator.data["available"] = False
+    advance_ticks(r, 300)
+    assert "B0" not in r.commands
+    assert r.control.problem == "device_unavailable"
+    r.commands.clear()
+    r.report(available=True, prg=2, tmr="00:00")
+    assert r.commands == ["T1"]
+    r.report(tmr="00:59")
+    advance_ticks(r, 60)
+    assert "B0" not in r.commands
+    assert r.control.problem is None
+    assert r.control.enabled
+
+
+def test_retry_is_granted_again_after_a_confirmed_renewal(monkeypatch):
+    r = Rig(monkeypatch, sensor=False)
+    r.control.turn_on()
+    r.report(prg=2, tmr="00:00")
+    advance_ticks(r, 15)
+    r.report(tmr="00:59")
+    r.advance(600)
+    r.report(tmr="00:00")
+    r.commands.clear()
+    advance_ticks(r, 15)
+    assert r.commands == ["T1"]
+    assert r.control.problem is None
 
 
 def test_session_deadline_survives_cycles_and_expires(monkeypatch):
@@ -575,7 +650,7 @@ def test_stale_timer_fault_does_not_lock_out_the_remote(monkeypatch):
     r = Rig(monkeypatch)
     r.control.turn_on()
     r.report(prg=2, tmr="00:00")
-    r.advance(16)
+    exhaust_timer_retries(r)
     assert r.control.problem == "timer_unconfirmed"
     r.report(prg=0, tmr="00:00")
     r.advance(5)
@@ -592,7 +667,7 @@ def test_stale_timer_fault_does_not_lock_out_the_remote(monkeypatch):
 def test_fault_without_device_start_does_not_lock_out_the_remote(monkeypatch):
     r = Rig(monkeypatch)
     r.control.turn_on()  # the heater never leaves standby
-    r.advance(16)
+    exhaust_timer_retries(r)
     assert r.control.problem == "timer_unconfirmed"
     r.report(prg=0, tmr="00:00")
     r.commands.clear()
@@ -605,7 +680,7 @@ def test_unprotected_remote_start_is_left_alone_after_a_fault(monkeypatch):
     r = Rig(monkeypatch, protect_external_starts=False)
     r.control.turn_on()
     r.report(prg=2, tmr="00:00")
-    r.advance(16)
+    exhaust_timer_retries(r)
     r.report(prg=0, tmr="00:00")
     r.advance(5)
     r.commands.clear()
@@ -645,7 +720,7 @@ def test_timer_applied_during_status_gap_is_confirmed_on_recovery(monkeypatch):
 def test_reconnects_cannot_postpone_an_unconfirmed_timer(monkeypatch):
     r = Rig(monkeypatch, sensor=False)
     r.control.turn_on()
-    for _ in range(12):
+    for _ in range(40):
         r.report(available=True, prg=2, tmr="00:00")
         r.advance(5)
         r.coordinator.data["available"] = False
@@ -700,6 +775,8 @@ def test_ack_window_never_accepts_an_expired_interval(monkeypatch):
     r.advance(3600)
     r.report(available=True, prg=2, tmr="00:00")
     r.advance(5)
+    assert r.commands[-1] == "T1"  # first resend, with a fresh window
+    exhaust_timer_retries(r, TIMER_RETRIES)
     assert r.commands[-1] == "B0"
     assert r.control.problem == "timer_unconfirmed"
 

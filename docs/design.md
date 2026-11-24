@@ -79,9 +79,14 @@ countdown (`T1`) running whenever it heats:
 - Luxeva climate renews `T1` every ten minutes while heating is needed and both
   device and sensor data are valid. If HA, the network or MQTT fails, renewals stop
   and the heater switches itself off within one hour.
-- A renewal must be confirmed by fresh device status within 15 seconds. An
-  unconfirmed renewal stops that heating run and disables regulation until the
-  next explicit start in HA. It does not block later starts from the remote or app.
+- A renewal must be confirmed by fresh device status within 15 seconds. MQTT
+  commands use QoS 0 and a single one can be lost or misapplied, so an
+  unconfirmed `T1` is sent again, each time with a new 15-second window: up to
+  7 resends, 8 tries over 2 minutes. Only time while the heater reports status
+  counts, so a Wi-Fi gap does not use the tries up (the heater could not receive
+  `B0` during the gap either). If no try is confirmed, the integration stops that
+  heating run and disables regulation until the next explicit start in HA. It
+  does not block later starts from the remote or app.
 - A confirmation that was pending when status went silent keeps its original
   deadline; a countdown that has run out never counts as confirmation.
 - 30 seconds without status marks the heater unavailable. That alone does not stop
