@@ -1,5 +1,12 @@
 # Release notes
 
+## 2.1.0 — Safety timer retries
+
+- Retry an unconfirmed safety timer for up to 2 minutes before stopping. A one-hour `T1` that the heater does not confirm within 15 seconds is now sent again, up to 7 times (8 tries in total). Before, a single missed confirmation stopped heating and disabled regulation until a manual start. Time while the heater is unavailable does not count, so a Wi-Fi gap does not use up the tries. If no try is confirmed, heating stops as before ([#48](https://github.com/gszigethy/HA-LuxevaHeater/pull/48)).
+- Use the native temperature API for the climate entity. This removes the Home Assistant 2026.11 deprecation warnings for `LuxevaClimate`; the old names stop working in 2027.11 ([#47](https://github.com/gszigethy/HA-LuxevaHeater/pull/47)).
+
+The minimum supported Home Assistant version is now **2026.11.0** (was 2026.9.4). HACS and the Marketplace do not offer this update on older versions.
+
 ## 2.0.8 — Release packaging maintenance
 
 - Install from the `luxeva_heater.zip` release asset in HACS and the Home Assistant Marketplace (`zip_release` in `hacs.json`), so installs and updates show up in the download count.
