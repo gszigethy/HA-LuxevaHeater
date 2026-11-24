@@ -41,6 +41,9 @@ CONF_PREPARE_BROKER = "prepare_mosquitto"
 RENEW_SECONDS = 600
 CONTROL_INTERVAL = 5
 TIMER_ACK_SECONDS = 15
+# Resends of an unconfirmed T1: with the first send, 8 tries over 2 minutes of
+# heater status. Time while the heater is unavailable does not count.
+TIMER_RETRIES = 7
 DEFAULT_OPTIONS: dict[str, Any] = {
     CONF_CONTROL_MODE: MODE_CLIMATE,
     CONF_CONNECTION: CONNECTION_CLOUD,
