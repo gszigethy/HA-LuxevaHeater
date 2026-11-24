@@ -80,8 +80,11 @@ countdown (`T1`) running whenever it heats:
   device and sensor data are valid. If HA, the network or MQTT fails, renewals stop
   and the heater switches itself off within one hour.
 - A renewal must be confirmed by fresh device status within 15 seconds. An
-  unconfirmed renewal stops that heating run and disables regulation until the
-  next explicit start in HA. It does not block later starts from the remote or app.
+  unconfirmed `T1` is sent once more, with a new 15-second window, because MQTT
+  commands use QoS 0 and a single one can be lost or misapplied. If the resend is
+  not confirmed either, the integration stops that heating run and disables
+  regulation until the next explicit start in HA. It does not block later starts
+  from the remote or app.
 - A confirmation that was pending when status went silent keeps its original
   deadline; a countdown that has run out never counts as confirmation.
 - 30 seconds without status marks the heater unavailable. That alone does not stop

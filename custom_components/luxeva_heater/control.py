@@ -75,6 +75,8 @@ class LuxevaControl:
         self._last_lease: datetime | None = None
         self._awaiting_timer: datetime | None = None
         self._timer_confirmed = False
+        # One resend per pending confirmation: QoS 0 commands can be lost.
+        self._timer_retried = False
         self._own_commands: deque[tuple[str, datetime]] = deque(maxlen=100)
         self._last_report: tuple[int, datetime] | None = None
         self._seen_status = False
@@ -247,6 +249,7 @@ class LuxevaControl:
         if previous.get("prg", 0) > 0 and data["prg"] == 0:
             self._timer_confirmed = False
             self._awaiting_timer = None
+            self._timer_retried = False
             self._last_lease = None
             self._last_toggle = now
         if data["prg"] > 0 and previous.get("prg") != data["prg"]:
@@ -259,6 +262,7 @@ class LuxevaControl:
             if max(1, 59 - int(elapsed // 60)) <= minutes <= 60:
                 self._timer_confirmed = True
                 self._awaiting_timer = None
+                self._timer_retried = False
                 if self.problem == "timer_unconfirmed":
                     self.problem = None
             elif (
@@ -314,6 +318,23 @@ class LuxevaControl:
             self._awaiting_timer = now
             self._timer_confirmed = False
 
+    def _retry_timer(self, now: datetime) -> bool:
+        """Resend an unconfirmed T1 once before treating it as a fault.
+
+        The retry keeps the heater without a confirmed countdown for at most one
+        more acknowledgement window; a second miss stops heating as before.
+        """
+        if self._timer_retried or not self.coordinator.publish("T1"):
+            return False
+        _LOGGER.warning(
+            "Luxeva %s did not confirm its safety timer; sending it once more",
+            self.coordinator.mac,
+        )
+        self._timer_retried = True
+        self._last_lease = now
+        self._awaiting_timer = now
+        return True
+
     def _stop_device(self, now: datetime) -> None:
         # Retry unconfirmed shutdowns at a bounded rate, including after reconnect.
         if not self.coordinator.data["available"]:
@@ -326,6 +347,7 @@ class LuxevaControl:
         # lost, the heater would keep running without its fallback countdown.
         self.coordinator.publish("B0")
         self._awaiting_timer = None
+        self._timer_retried = False
         self._timer_confirmed = False
         self._last_lease = None
         self._last_toggle = now
@@ -375,10 +397,13 @@ class LuxevaControl:
             self.demand = False
             self.coordinator._notify_listeners()
             return
-        elif self._timer_fault or (
-            self._awaiting_timer
-            and (now - self._awaiting_timer).total_seconds() >= TIMER_ACK_SECONDS
-        ):
+        elif (
+            self._timer_fault
+            or (
+                self._awaiting_timer
+                and (now - self._awaiting_timer).total_seconds() >= TIMER_ACK_SECONDS
+            )
+        ) and (self._timer_fault or not self._retry_timer(now)):
             if not self._timer_fault:
                 _LOGGER.warning(
                     "Luxeva %s did not confirm its safety timer; stopping heating",
@@ -387,6 +412,7 @@ class LuxevaControl:
             self.problem = "timer_unconfirmed"
             self._timer_fault = True
             self._awaiting_timer = None
+            self._timer_retried = False
             self.enabled = False
             self._save()
         if self.problem:
